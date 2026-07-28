@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using X_Libra_Catering.Shared;
+using X_Libra_Catering.Shared.Enums;
 
 namespace X_Libra_Catering.Cliente.Services
 {
@@ -15,6 +16,15 @@ namespace X_Libra_Catering.Cliente.Services
         public async Task<List<EventoDTO>> Lista()
         {
             var Resultado = await Http.GetFromJsonAsync<ResponseAPI<List<EventoDTO>>>("api/Eventos/Lista");
+            if (Resultado!.EsCorrecto)
+                return Resultado.Valor!;
+            else
+                throw new Exception(Resultado.Mensaje);
+        }
+
+        public async Task<DashboardKpiDTO> ObtenerKpi()
+        {
+            var Resultado = await Http.GetFromJsonAsync<ResponseAPI<DashboardKpiDTO>>("api/Eventos/Kpi");
             if (Resultado!.EsCorrecto)
                 return Resultado.Valor!;
             else
@@ -43,6 +53,16 @@ namespace X_Libra_Catering.Cliente.Services
         public async Task<int> Modificar(int Cod, EventoDTO dto)
         {
             var Resultado = await Http.PutAsJsonAsync($"api/Eventos/Modificar/{Cod}", dto);
+            var Respuesta = await Resultado.Content.ReadFromJsonAsync<ResponseAPI<int>>();
+            if (Respuesta!.EsCorrecto)
+                return Respuesta.Valor;
+            else
+                throw new Exception(Respuesta.Mensaje);
+        }
+
+        public async Task<int> CambiarEstado(int Cod, EstadoEvento nuevoEstado)
+        {
+            var Resultado = await Http.PutAsJsonAsync($"api/Eventos/CambiarEstado/{Cod}", nuevoEstado);
             var Respuesta = await Resultado.Content.ReadFromJsonAsync<ResponseAPI<int>>();
             if (Respuesta!.EsCorrecto)
                 return Respuesta.Valor;

@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using X_Libra_Catering.Server.Data;
 using X_Libra_Catering.Server.Models;
 using X_Libra_Catering.Shared;
+using X_Libra_Catering.Shared.Enums;
 
 namespace X_Libra_Catering.Server.Controllers
 {
@@ -15,6 +16,38 @@ namespace X_Libra_Catering.Server.Controllers
         public EventosController(BdXLibraCateringContext context)
         {
             _context = context;
+        }
+
+        [HttpGet("Kpi")]
+        public async Task<IActionResult> Kpi()
+        {
+            var RespuestaApi = new ResponseAPI<DashboardKpiDTO>();
+            try
+            {
+                var ahora = DateTime.Now;
+                var inicioMes = new DateTime(ahora.Year, ahora.Month, 1);
+
+                var total = await _context.Eventos.CountAsync();
+                var pendientes = await _context.Eventos.CountAsync(e => e.Estado == EstadoEvento.Pendiente);
+                var enPreparacion = await _context.Eventos.CountAsync(e => e.Estado == EstadoEvento.EnPreparacion);
+                var completadosMes = await _context.Eventos.CountAsync(e => e.Estado == EstadoEvento.Completado && e.FechaEvento >= inicioMes);
+
+                RespuestaApi.EsCorrecto = true;
+                RespuestaApi.Valor = new DashboardKpiDTO
+                {
+                    TotalEventos = total,
+                    Pendientes = pendientes,
+                    EnPreparacion = enPreparacion,
+                    CompletadosMes = completadosMes
+                };
+                RespuestaApi.Mensaje = "KPI calculados";
+            }
+            catch (Exception ex)
+            {
+                RespuestaApi.EsCorrecto = false;
+                RespuestaApi.Mensaje = ex.Message;
+            }
+            return Ok(RespuestaApi);
         }
 
         [HttpGet("Lista")]
@@ -30,6 +63,7 @@ namespace X_Libra_Catering.Server.Controllers
                     ClienteId = e.ClienteId,
                     NombreEvento = e.NombreEvento,
                     TipoEvento = e.TipoEvento,
+                    Estado = e.Estado,
                     FechaEvento = e.FechaEvento,
                     Ubicacion = e.Ubicacion,
                     NumInvitados = e.NumInvitados,
@@ -68,6 +102,7 @@ namespace X_Libra_Catering.Server.Controllers
                         ClienteId = entidad.ClienteId,
                         NombreEvento = entidad.NombreEvento,
                         TipoEvento = entidad.TipoEvento,
+                        Estado = entidad.Estado,
                         FechaEvento = entidad.FechaEvento,
                         Ubicacion = entidad.Ubicacion,
                         NumInvitados = entidad.NumInvitados,
@@ -95,6 +130,7 @@ namespace X_Libra_Catering.Server.Controllers
                     ClienteId = dto.ClienteId,
                     NombreEvento = dto.NombreEvento,
                     TipoEvento = dto.TipoEvento,
+                    Estado = dto.Estado,
                     FechaEvento = dto.FechaEvento,
                     Ubicacion = dto.Ubicacion,
                     NumInvitados = dto.NumInvitados
@@ -130,6 +166,7 @@ namespace X_Libra_Catering.Server.Controllers
                     entidad.ClienteId = dto.ClienteId;
                     entidad.NombreEvento = dto.NombreEvento;
                     entidad.TipoEvento = dto.TipoEvento;
+                    entidad.Estado = dto.Estado;
                     entidad.FechaEvento = dto.FechaEvento;
                     entidad.Ubicacion = dto.Ubicacion;
                     entidad.NumInvitados = dto.NumInvitados;
@@ -137,6 +174,35 @@ namespace X_Libra_Catering.Server.Controllers
                     RespuestaApi.EsCorrecto = true;
                     RespuestaApi.Valor = entidad.Id;
                     RespuestaApi.Mensaje = "Evento modificado";
+                }
+            }
+            catch (Exception ex)
+            {
+                RespuestaApi.EsCorrecto = false;
+                RespuestaApi.Mensaje = ex.Message;
+            }
+            return Ok(RespuestaApi);
+        }
+
+        [HttpPut("CambiarEstado/{Cod}")]
+        public async Task<IActionResult> CambiarEstado(int Cod, [FromBody] EstadoEvento nuevoEstado)
+        {
+            var RespuestaApi = new ResponseAPI<int>();
+            try
+            {
+                var entidad = await _context.Eventos.FindAsync(Cod);
+                if (entidad == null)
+                {
+                    RespuestaApi.EsCorrecto = false;
+                    RespuestaApi.Mensaje = "Evento no encontrado";
+                }
+                else
+                {
+                    entidad.Estado = nuevoEstado;
+                    await _context.SaveChangesAsync();
+                    RespuestaApi.EsCorrecto = true;
+                    RespuestaApi.Valor = entidad.Id;
+                    RespuestaApi.Mensaje = $"Estado cambiado a {nuevoEstado}";
                 }
             }
             catch (Exception ex)

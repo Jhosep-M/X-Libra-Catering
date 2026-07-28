@@ -45,6 +45,15 @@
         <label>Num. Invitados</label>
         <InputNumber class="form-control" @bind-Value="dto.NumInvitados" />
     </div>
+    <div class="form-group">
+        <label>Estado</label>
+        <InputSelect class="form-select" @bind-Value="dto.Estado">
+            @foreach (var e in Enum.GetValues<EstadoEvento>())
+            {
+                <option value="@e">@e</option>
+            }
+        </InputSelect>
+    </div>
     <br />
     <button type="submit" class="btn btn-primary">@TextoBoton</button>
     <a href="eventos" class="btn btn-secondary">Cancelar</a>

@@ -35,6 +35,7 @@ namespace X_Libra_Catering.Server.Data
                 entity.Property(e => e.ClienteId).HasColumnName("CLIENTE_ID");
                 entity.Property(e => e.NombreEvento).HasColumnName("NOMBRE_EVENTO").HasMaxLength(150).IsUnicode(false);
                 entity.Property(e => e.TipoEvento).HasColumnName("TIPO_EVENTO").HasConversion<string>().HasMaxLength(20).IsUnicode(false);
+                entity.Property(e => e.Estado).HasColumnName("ESTADO").HasConversion<string>().HasMaxLength(20).IsUnicode(false);
                 entity.Property(e => e.FechaEvento).HasColumnName("FECHA_EVENTO");
                 entity.Property(e => e.Ubicacion).HasColumnName("UBICACION").HasMaxLength(200).IsUnicode(false);
                 entity.Property(e => e.NumInvitados).HasColumnName("NUM_INVITADOS");
