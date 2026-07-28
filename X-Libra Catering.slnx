@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="X-Libra_Catering.Cliente/X-Libra_Catering.Cliente.csproj" />
+  <Project Path="X-Libra_Catering.Server/X-Libra_Catering.Server.csproj" />
+  <Project Path="X-Libra_Catering.Shared/X-Libra_Catering.Shared.csproj" />
+</Solution>

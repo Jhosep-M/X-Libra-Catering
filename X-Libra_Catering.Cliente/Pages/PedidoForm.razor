@@ -1,0 +1,188 @@
+@page "/pedido"
+@page "/pedido/{CodModificar:int}"
+@inject ServicioPedido ServPedido
+@inject ServicioEvento ServEvento
+@inject ServicioVehiculo ServVehiculo
+@inject ServicioMenu ServMenu
+@inject NavigationManager ServNav
+
+<PageTitle>@Titulo</PageTitle>
+
+<h3>@Titulo</h3>
+
+<EditForm Model="@dto" OnValidSubmit="@Guardar">
+    <div class="form-group">
+        <label>Evento</label>
+        <InputSelect class="form-select" @bind-Value="dto.EventoId">
+            <option value="0">-- Seleccione --</option>
+            @foreach (var e in eventos)
+            {
+                <option value="@e.Id">@e.NombreEvento</option>
+            }
+        </InputSelect>
+    </div>
+    <div class="form-group">
+        <label>Vehiculo</label>
+        <InputSelect class="form-select" @bind-Value="dto.VehiculoId">
+            <option value="0">-- Seleccione --</option>
+            @foreach (var v in vehiculos)
+            {
+                <option value="@v.Id">@v.Placa - @v.Marca @v.Modelo</option>
+            }
+        </InputSelect>
+    </div>
+    <div class="form-group">
+        <label>Fecha Pedido</label>
+        <InputDate class="form-control" @bind-Value="dto.FechaPedido" />
+    </div>
+    <div class="form-group">
+        <label>Estado</label>
+        <InputSelect class="form-select" @bind-Value="dto.Estado">
+            @foreach (var e in Enum.GetValues<EstadoPedido>())
+            {
+                <option value="@e">@e</option>
+            }
+        </InputSelect>
+    </div>
+
+    <hr />
+    <h5>Detalle del Pedido</h5>
+
+    <div class="row mb-2">
+        <div class="col-md-4">
+            <select class="form-select" @bind="nuevoDetalle.MenuId">
+                <option value="0">-- Seleccione Menu --</option>
+                @foreach (var m in menus)
+                {
+                    <option value="@m.Id">@m.Nombre - @m.Precio.ToString("C")</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-2">
+            <input type="number" class="form-control" @bind="nuevoDetalle.Cantidad" placeholder="Cantidad" />
+        </div>
+        <div class="col-md-2">
+            <button type="button" class="btn btn-success" @onclick="AgregarDetalle">Agregar</button>
+        </div>
+    </div>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Menu</th>
+                <th>Cantidad</th>
+                <th>Precio Unit.</th>
+                <th>Subtotal</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var det in dto.Detalles)
+            {
+                <tr>
+                    <td>@det.MenuNombre</td>
+                    <td>@det.Cantidad</td>
+                    <td>@det.PrecioUnitario.ToString("C")</td>
+                    <td>@det.Subtotal.ToString("C")</td>
+                    <td>
+                        <button type="button" class="btn btn-sm btn-danger" @onclick="() => QuitarDetalle(det)">Quitar</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                <td><strong>@dto.Detalles.Sum(d => d.Subtotal).ToString("C")</strong></td>
+                <td></td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <br />
+    <button type="submit" class="btn btn-primary">@TextoBoton</button>
+    <a href="pedidos" class="btn btn-secondary">Cancelar</a>
+</EditForm>
+
+@code {
+    [Parameter]
+    public int CodModificar { get; set; }
+
+    private PedidoCabeceraDTO dto = new();
+    private List<EventoDTO> eventos = new();
+    private List<VehiculoDTO> vehiculos = new();
+    private List<MenuDTO> menus = new();
+
+    private PedidoDetalleDTO nuevoDetalle = new();
+
+    private string Titulo = "Nuevo Pedido";
+    private string TextoBoton = "Guardar";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try { eventos = await ServEvento.Lista(); } catch { }
+        try { vehiculos = await ServVehiculo.Lista(); } catch { }
+        try { menus = await ServMenu.Lista(); } catch { }
+
+        if (CodModificar > 0)
+        {
+            Titulo = "Modificar Pedido";
+            TextoBoton = "Modificar";
+            try
+            {
+                dto = await ServPedido.Buscar(CodModificar);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+            }
+        }
+    }
+
+    private void AgregarDetalle()
+    {
+        if (nuevoDetalle.MenuId > 0 && nuevoDetalle.Cantidad > 0)
+        {
+            var menu = menus.FirstOrDefault(m => m.Id == nuevoDetalle.MenuId);
+            var existente = dto.Detalles.FirstOrDefault(d => d.MenuId == nuevoDetalle.MenuId);
+            if (existente != null)
+            {
+                existente.Cantidad += nuevoDetalle.Cantidad;
+                existente.Subtotal = existente.Cantidad * existente.PrecioUnitario;
+            }
+            else
+            {
+                dto.Detalles.Add(new PedidoDetalleDTO
+                {
+                    MenuId = nuevoDetalle.MenuId,
+                    MenuNombre = menu?.Nombre,
+                    Cantidad = nuevoDetalle.Cantidad,
+                    PrecioUnitario = menu?.Precio ?? 0,
+                    Subtotal = (nuevoDetalle.Cantidad) * (menu?.Precio ?? 0)
+                });
+            }
+            nuevoDetalle = new();
+        }
+    }
+
+    private void QuitarDetalle(PedidoDetalleDTO det)
+    {
+        dto.Detalles.Remove(det);
+    }
+
+    private async Task Guardar()
+    {
+        try
+        {
+            if (CodModificar > 0)
+                await ServPedido.Modificar(CodModificar, dto);
+            else
+                await ServPedido.Guardar(dto);
+            ServNav.NavigateTo("pedidos");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+    }
+}

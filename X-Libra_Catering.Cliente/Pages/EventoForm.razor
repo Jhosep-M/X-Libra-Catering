@@ -1,0 +1,102 @@
+@page "/evento"
+@page "/evento/{CodModificar:int}"
+@inject ServicioEvento ServEvento
+@inject ServicioCliente ServCliente
+@inject NavigationManager ServNav
+
+<PageTitle>@Titulo</PageTitle>
+
+<h3>@Titulo</h3>
+
+<EditForm Model="@dto" OnValidSubmit="@Guardar">
+    <div class="form-group">
+        <label>Nombre Evento</label>
+        <InputText class="form-control" @bind-Value="dto.NombreEvento" />
+    </div>
+    <div class="form-group">
+        <label>Cliente</label>
+        <InputSelect class="form-select" @bind-Value="dto.ClienteId">
+            <option value="0">-- Seleccione --</option>
+            @foreach (var c in clientes)
+            {
+                <option value="@c.Id">@c.Nombre</option>
+            }
+        </InputSelect>
+    </div>
+    <div class="form-group">
+        <label>Tipo Evento</label>
+        <InputSelect class="form-select" @bind-Value="dto.TipoEvento">
+            @foreach (var t in Enum.GetValues<TipoEvento>())
+            {
+                <option value="@t">@t</option>
+            }
+        </InputSelect>
+    </div>
+    <div class="form-group">
+        <label>Fecha Evento</label>
+        <InputDate class="form-control" @bind-Value="dto.FechaEvento" />
+    </div>
+    <div class="form-group">
+        <label>Ubicacion</label>
+        <InputText class="form-control" @bind-Value="dto.Ubicacion" />
+    </div>
+    <div class="form-group">
+        <label>Num. Invitados</label>
+        <InputNumber class="form-control" @bind-Value="dto.NumInvitados" />
+    </div>
+    <br />
+    <button type="submit" class="btn btn-primary">@TextoBoton</button>
+    <a href="eventos" class="btn btn-secondary">Cancelar</a>
+</EditForm>
+
+@code {
+    [Parameter]
+    public int CodModificar { get; set; }
+
+    private EventoDTO dto = new();
+    private List<ClienteDTO> clientes = new();
+    private string Titulo = "Nuevo Evento";
+    private string TextoBoton = "Guardar";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            clientes = await ServCliente.Lista();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+
+        if (CodModificar > 0)
+        {
+            Titulo = "Modificar Evento";
+            TextoBoton = "Modificar";
+            try
+            {
+                dto = await ServEvento.Buscar(CodModificar);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+            }
+        }
+    }
+
+    private async Task Guardar()
+    {
+        try
+        {
+            if (CodModificar > 0)
+                await ServEvento.Modificar(CodModificar, dto);
+            else
+                await ServEvento.Guardar(dto);
+            ServNav.NavigateTo("eventos");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+    }
+}

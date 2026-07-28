@@ -1,0 +1,81 @@
+@page "/menu"
+@page "/menu/{CodModificar:int}"
+@inject ServicioMenu ServMenu
+@inject NavigationManager ServNav
+
+<PageTitle>@Titulo</PageTitle>
+
+<h3>@Titulo</h3>
+
+<EditForm Model="@dto" OnValidSubmit="@Guardar">
+    <div class="form-group">
+        <label>Nombre</label>
+        <InputText class="form-control" @bind-Value="dto.Nombre" />
+    </div>
+    <div class="form-group">
+        <label>Descripcion</label>
+        <InputText class="form-control" @bind-Value="dto.Descripcion" />
+    </div>
+    <div class="form-group">
+        <label>Categoria</label>
+        <InputSelect class="form-select" @bind-Value="dto.Categoria">
+            @foreach (var c in Enum.GetValues<CategoriaMenu>())
+            {
+                <option value="@c">@c</option>
+            }
+        </InputSelect>
+    </div>
+    <div class="form-group">
+        <label>Precio</label>
+        <InputNumber class="form-control" @bind-Value="dto.Precio" />
+    </div>
+    <div class="form-check">
+        <InputCheckbox class="form-check-input" @bind-Value="dto.RequiereRefrigeracion" />
+        <label class="form-check-label">Requiere Refrigeracion</label>
+    </div>
+    <br />
+    <button type="submit" class="btn btn-primary">@TextoBoton</button>
+    <a href="menus" class="btn btn-secondary">Cancelar</a>
+</EditForm>
+
+@code {
+    [Parameter]
+    public int CodModificar { get; set; }
+
+    private MenuDTO dto = new();
+    private string Titulo = "Nuevo Menu";
+    private string TextoBoton = "Guardar";
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (CodModificar > 0)
+        {
+            Titulo = "Modificar Menu";
+            TextoBoton = "Modificar";
+            try
+            {
+                dto = await ServMenu.Buscar(CodModificar);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+            }
+        }
+    }
+
+    private async Task Guardar()
+    {
+        try
+        {
+            if (CodModificar > 0)
+                await ServMenu.Modificar(CodModificar, dto);
+            else
+                await ServMenu.Guardar(dto);
+            ServNav.NavigateTo("menus");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+    }
+}

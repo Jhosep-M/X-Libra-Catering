@@ -1,0 +1,63 @@
+using System.Net.Http.Json;
+using X_Libra_Catering.Shared;
+
+namespace X_Libra_Catering.Cliente.Services
+{
+    public class ServicioEvento
+    {
+        private readonly HttpClient Http;
+
+        public ServicioEvento(HttpClient http)
+        {
+            Http = http;
+        }
+
+        public async Task<List<EventoDTO>> Lista()
+        {
+            var Resultado = await Http.GetFromJsonAsync<ResponseAPI<List<EventoDTO>>>("api/Eventos/Lista");
+            if (Resultado!.EsCorrecto)
+                return Resultado.Valor!;
+            else
+                throw new Exception(Resultado.Mensaje);
+        }
+
+        public async Task<EventoDTO> Buscar(int Cod)
+        {
+            var Resultado = await Http.GetFromJsonAsync<ResponseAPI<EventoDTO>>($"api/Eventos/Buscar/{Cod}");
+            if (Resultado!.EsCorrecto)
+                return Resultado.Valor!;
+            else
+                throw new Exception(Resultado.Mensaje);
+        }
+
+        public async Task<int> Guardar(EventoDTO dto)
+        {
+            var Resultado = await Http.PostAsJsonAsync("api/Eventos/Guardar", dto);
+            var Respuesta = await Resultado.Content.ReadFromJsonAsync<ResponseAPI<int>>();
+            if (Respuesta!.EsCorrecto)
+                return Respuesta.Valor;
+            else
+                throw new Exception(Respuesta.Mensaje);
+        }
+
+        public async Task<int> Modificar(int Cod, EventoDTO dto)
+        {
+            var Resultado = await Http.PutAsJsonAsync($"api/Eventos/Modificar/{Cod}", dto);
+            var Respuesta = await Resultado.Content.ReadFromJsonAsync<ResponseAPI<int>>();
+            if (Respuesta!.EsCorrecto)
+                return Respuesta.Valor;
+            else
+                throw new Exception(Respuesta.Mensaje);
+        }
+
+        public async Task<int> Eliminar(int Cod)
+        {
+            var Resultado = await Http.DeleteAsync($"api/Eventos/Eliminar/{Cod}");
+            var Respuesta = await Resultado.Content.ReadFromJsonAsync<ResponseAPI<int>>();
+            if (Respuesta!.EsCorrecto)
+                return Respuesta.Valor;
+            else
+                throw new Exception(Respuesta.Mensaje);
+        }
+    }
+}

@@ -1,0 +1,72 @@
+@page "/cliente"
+@page "/cliente/{CodModificar:int}"
+@inject ServicioCliente ServCliente
+@inject NavigationManager ServNav
+
+<PageTitle>@Titulo</PageTitle>
+
+<h3>@Titulo</h3>
+
+<EditForm Model="@dto" OnValidSubmit="@Guardar">
+    <div class="form-group">
+        <label>Nombre</label>
+        <InputText class="form-control" @bind-Value="dto.Nombre" />
+    </div>
+    <div class="form-group">
+        <label>Telefono</label>
+        <InputText class="form-control" @bind-Value="dto.Telefono" />
+    </div>
+    <div class="form-group">
+        <label>Email</label>
+        <InputText class="form-control" @bind-Value="dto.Email" />
+    </div>
+    <div class="form-group">
+        <label>Direccion</label>
+        <InputText class="form-control" @bind-Value="dto.Direccion" />
+    </div>
+    <br />
+    <button type="submit" class="btn btn-primary">@TextoBoton</button>
+    <a href="clientes" class="btn btn-secondary">Cancelar</a>
+</EditForm>
+
+@code {
+    [Parameter]
+    public int CodModificar { get; set; }
+
+    private ClienteDTO dto = new();
+    private string Titulo = "Nuevo Cliente";
+    private string TextoBoton = "Guardar";
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (CodModificar > 0)
+        {
+            Titulo = "Modificar Cliente";
+            TextoBoton = "Modificar";
+            try
+            {
+                dto = await ServCliente.Buscar(CodModificar);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+            }
+        }
+    }
+
+    private async Task Guardar()
+    {
+        try
+        {
+            if (CodModificar > 0)
+                await ServCliente.Modificar(CodModificar, dto);
+            else
+                await ServCliente.Guardar(dto);
+            ServNav.NavigateTo("clientes");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+    }
+}

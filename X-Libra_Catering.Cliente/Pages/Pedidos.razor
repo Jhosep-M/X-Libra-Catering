@@ -1,0 +1,76 @@
+@page "/pedidos"
+@inject ServicioPedido ServPedido
+@inject NavigationManager ServNav
+
+<PageTitle>Pedidos</PageTitle>
+
+<h3>Listado de Pedidos</h3>
+
+<p>
+    <a href="pedido" class="btn btn-primary">Agregar</a>
+</p>
+
+<table class="table" align="center" width="80%" border="1">
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>Evento</th>
+            <th>Vehiculo</th>
+            <th>Fecha</th>
+            <th>Estado</th>
+            <th>Total</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in lista)
+        {
+            <tr>
+                <td>@item.Id</td>
+                <td>@item.EventoNombre</td>
+                <td>@item.VehiculoPlaca</td>
+                <td>@item.FechaPedido.ToShortDateString()</td>
+                <td>@item.Estado</td>
+                <td>@item.Total.ToString("C")</td>
+                <td>
+                    <a href="pedido/@item.Id" class="btn btn-sm btn-warning">Modificar</a>
+                    <button class="btn btn-sm btn-danger" @onclick="() => Eliminar(item.Id)">Eliminar</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    private List<PedidoCabeceraDTO> lista = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarLista();
+    }
+
+    private async Task CargarLista()
+    {
+        try
+        {
+            lista = await ServPedido.Lista();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+    }
+
+    private async Task Eliminar(int Cod)
+    {
+        try
+        {
+            await ServPedido.Eliminar(Cod);
+            await CargarLista();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+    }
+}

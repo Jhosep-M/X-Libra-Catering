@@ -1,0 +1,78 @@
+@page "/vehiculos"
+@inject ServicioVehiculo ServVehiculo
+@inject NavigationManager ServNav
+
+<PageTitle>Vehiculos</PageTitle>
+
+<h3>Listado de Vehiculos</h3>
+
+<p>
+    <a href="vehiculo" class="btn btn-primary">Agregar</a>
+</p>
+
+<table class="table" align="center" width="80%" border="1">
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>Marca</th>
+            <th>Modelo</th>
+            <th>Placa</th>
+            <th>Capacidad (Kg)</th>
+            <th>Refrigeracion</th>
+            <th>Disponible</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in lista)
+        {
+            <tr>
+                <td>@item.Id</td>
+                <td>@item.Marca</td>
+                <td>@item.Modelo</td>
+                <td>@item.Placa</td>
+                <td>@item.CapacidadKg</td>
+                <td>@(item.TieneRefrigeracion ? "Si" : "No")</td>
+                <td>@(item.Disponible ? "Si" : "No")</td>
+                <td>
+                    <a href="vehiculo/@item.Id" class="btn btn-sm btn-warning">Modificar</a>
+                    <button class="btn btn-sm btn-danger" @onclick="() => Eliminar(item.Id)">Eliminar</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    private List<VehiculoDTO> lista = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarLista();
+    }
+
+    private async Task CargarLista()
+    {
+        try
+        {
+            lista = await ServVehiculo.Lista();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+    }
+
+    private async Task Eliminar(int Cod)
+    {
+        try
+        {
+            await ServVehiculo.Eliminar(Cod);
+            await CargarLista();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+    }
+}
