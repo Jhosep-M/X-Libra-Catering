@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using QRCoder;
 using X_Libra_Catering.Server.Data;
 using X_Libra_Catering.Server.Models;
 using X_Libra_Catering.Shared;
+using X_Libra_Catering.Shared.Enums;
 
 namespace X_Libra_Catering.Server.Controllers
 {
@@ -209,6 +211,71 @@ namespace X_Libra_Catering.Server.Controllers
                 RespuestaApi.Mensaje = ex.Message;
             }
             return Ok(RespuestaApi);
+        }
+
+        [HttpPatch("CambiarEstado/{Cod}")]
+        public async Task<IActionResult> CambiarEstado(int Cod, [FromBody] string nuevoEstado)
+        {
+            var RespuestaApi = new ResponseAPI<int>();
+            try
+            {
+                var entidad = await _context.PedidoCabeceras.FindAsync(Cod);
+                if (entidad == null)
+                {
+                    RespuestaApi.EsCorrecto = false;
+                    RespuestaApi.Mensaje = "Pedido no encontrado";
+                }
+                else
+                {
+                    if (Enum.TryParse<EstadoPedido>(nuevoEstado, out var estado))
+                    {
+                        entidad.Estado = estado;
+                        await _context.SaveChangesAsync();
+                        RespuestaApi.EsCorrecto = true;
+                        RespuestaApi.Valor = entidad.Id;
+                        RespuestaApi.Mensaje = "Estado actualizado";
+                    }
+                    else
+                    {
+                        RespuestaApi.EsCorrecto = false;
+                        RespuestaApi.Mensaje = "Estado invalido";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                RespuestaApi.EsCorrecto = false;
+                RespuestaApi.Mensaje = ex.Message;
+            }
+            return Ok(RespuestaApi);
+        }
+
+        [HttpGet("Qr/{Cod}")]
+        public async Task<IActionResult> Qr(int Cod)
+        {
+            try
+            {
+                var entidad = await _context.PedidoCabeceras
+                    .Include(p => p.Evento)
+                    .FirstOrDefaultAsync(p => p.Id == Cod);
+                if (entidad == null)
+                    return NotFound();
+
+                var contenido = $"Pedido #{entidad.Id} | Evento: {entidad.Evento?.NombreEvento} | Fecha: {entidad.FechaPedido:dd/MM/yyyy} | Total: Bs {entidad.Total:N2}";
+
+                using var qr = new QRCodeGenerator();
+                var datos = qr.CreateQrCode(contenido, QRCodeGenerator.ECCLevel.Q);
+                using var grafico = new QRCode(datos);
+                using var bitmap = grafico.GetGraphic(20);
+                using var ms = new MemoryStream();
+                bitmap.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+                ms.Position = 0;
+                return File(ms.ToArray(), "image/png");
+            }
+            catch (Exception ex)
+            {
+                return Ok(new ResponseAPI<int> { EsCorrecto = false, Mensaje = ex.Message });
+            }
         }
 
         [HttpDelete("Eliminar/{Cod}")]

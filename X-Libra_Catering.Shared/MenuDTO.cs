@@ -10,5 +10,6 @@ namespace X_Libra_Catering.Shared
         public CategoriaMenu Categoria { get; set; }
         public decimal Precio { get; set; }
         public bool RequiereRefrigeracion { get; set; }
+        public string? ImagenRuta { get; set; }
     }
 }

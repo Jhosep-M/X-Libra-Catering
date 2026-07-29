@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using SkiaSharp;
 using X_Libra_Catering.Server.Data;
 using X_Libra_Catering.Server.Models;
 using X_Libra_Catering.Shared;
@@ -31,7 +32,8 @@ namespace X_Libra_Catering.Server.Controllers
                     Descripcion = m.Descripcion,
                     Categoria = m.Categoria,
                     Precio = m.Precio,
-                    RequiereRefrigeracion = m.RequiereRefrigeracion
+                    RequiereRefrigeracion = m.RequiereRefrigeracion,
+                    ImagenRuta = m.ImagenRuta
                 }).ToList();
                 RespuestaApi.EsCorrecto = true;
                 RespuestaApi.Valor = listaDTO;
@@ -67,7 +69,8 @@ namespace X_Libra_Catering.Server.Controllers
                         Descripcion = entidad.Descripcion,
                         Categoria = entidad.Categoria,
                         Precio = entidad.Precio,
-                        RequiereRefrigeracion = entidad.RequiereRefrigeracion
+                        RequiereRefrigeracion = entidad.RequiereRefrigeracion,
+                        ImagenRuta = entidad.ImagenRuta
                     };
                     RespuestaApi.Mensaje = "Menu encontrado";
                 }
@@ -92,13 +95,64 @@ namespace X_Libra_Catering.Server.Controllers
                     Descripcion = dto.Descripcion,
                     Categoria = dto.Categoria,
                     Precio = dto.Precio,
-                    RequiereRefrigeracion = dto.RequiereRefrigeracion
+                    RequiereRefrigeracion = dto.RequiereRefrigeracion,
+                    ImagenRuta = dto.ImagenRuta
                 };
                 _context.Menus.Add(entidad);
                 await _context.SaveChangesAsync();
                 RespuestaApi.EsCorrecto = true;
                 RespuestaApi.Valor = entidad.Id;
                 RespuestaApi.Mensaje = "Menu guardado";
+            }
+            catch (Exception ex)
+            {
+                RespuestaApi.EsCorrecto = false;
+                RespuestaApi.Mensaje = ex.Message;
+            }
+            return Ok(RespuestaApi);
+        }
+
+        [HttpPost("SubirImagen")]
+        public async Task<IActionResult> SubirImagen(IFormFile archivo)
+        {
+            var RespuestaApi = new ResponseAPI<string>();
+            try
+            {
+                if (archivo == null || archivo.Length == 0)
+                {
+                    RespuestaApi.EsCorrecto = false;
+                    RespuestaApi.Mensaje = "No se selecciono un archivo";
+                    return Ok(RespuestaApi);
+                }
+
+                var extension = Path.GetExtension(archivo.FileName).ToLower();
+                var permitidas = new[] { ".jpg", ".jpeg", ".png", ".webp" };
+                if (!permitidas.Contains(extension))
+                {
+                    RespuestaApi.EsCorrecto = false;
+                    RespuestaApi.Mensaje = "Formato no permitido. Use jpg, png o webp";
+                    return Ok(RespuestaApi);
+                }
+
+                var nombreArchivo = $"{Guid.NewGuid()}{extension}";
+                var rutaCompleta = Path.Combine("wwwroot", "uploads", "menus", nombreArchivo);
+
+                using var inputStream = archivo.OpenReadStream();
+                using var original = SKBitmap.Decode(inputStream);
+                var maxW = 400;
+                var maxH = 300;
+                var escala = Math.Min((float)maxW / original.Width, (float)maxH / original.Height);
+                using var resized = escala < 1
+                    ? original.Resize(new SKImageInfo((int)(original.Width * escala), (int)(original.Height * escala)), new SKSamplingOptions(SKFilterMode.Linear))
+                    : original;
+                using var image = SKImage.FromBitmap(resized);
+                using var data = image.Encode(SKEncodedImageFormat.Jpeg, 85);
+                using var fileStream = new FileStream(rutaCompleta, FileMode.Create);
+                data.SaveTo(fileStream);
+
+                RespuestaApi.EsCorrecto = true;
+                RespuestaApi.Valor = $"/uploads/menus/{nombreArchivo}";
+                RespuestaApi.Mensaje = "Imagen subida";
             }
             catch (Exception ex)
             {
@@ -127,6 +181,7 @@ namespace X_Libra_Catering.Server.Controllers
                     entidad.Categoria = dto.Categoria;
                     entidad.Precio = dto.Precio;
                     entidad.RequiereRefrigeracion = dto.RequiereRefrigeracion;
+                    entidad.ImagenRuta = dto.ImagenRuta;
                     await _context.SaveChangesAsync();
                     RespuestaApi.EsCorrecto = true;
                     RespuestaApi.Valor = entidad.Id;

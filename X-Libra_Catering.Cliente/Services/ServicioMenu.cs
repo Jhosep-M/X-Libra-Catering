@@ -1,3 +1,4 @@
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using X_Libra_Catering.Shared;
 
@@ -46,6 +47,23 @@ namespace X_Libra_Catering.Cliente.Services
             var Respuesta = await Resultado.Content.ReadFromJsonAsync<ResponseAPI<int>>();
             if (Respuesta!.EsCorrecto)
                 return Respuesta.Valor;
+            else
+                throw new Exception(Respuesta.Mensaje);
+        }
+
+        public async Task<string> SubirImagen(StreamContent archivo, string nombreArchivo)
+        {
+            using var form = new MultipartFormDataContent();
+            archivo.Headers.ContentDisposition = new ContentDispositionHeaderValue("form-data")
+            {
+                Name = "archivo",
+                FileName = nombreArchivo
+            };
+            form.Add(archivo, "archivo", nombreArchivo);
+            var Resultado = await Http.PostAsync("api/Menus/SubirImagen", form);
+            var Respuesta = await Resultado.Content.ReadFromJsonAsync<ResponseAPI<string>>();
+            if (Respuesta!.EsCorrecto)
+                return Respuesta.Valor!;
             else
                 throw new Exception(Respuesta.Mensaje);
         }

@@ -70,6 +70,15 @@ namespace X_Libra_Catering.Cliente.Services
                 throw new Exception(Respuesta.Mensaje);
         }
 
+        public async Task<byte[]> ExportarPdf(int Cod)
+        {
+            var Resultado = await Http.GetAsync($"api/Eventos/ExportarPdf/{Cod}");
+            if (Resultado.IsSuccessStatusCode)
+                return await Resultado.Content.ReadAsByteArrayAsync();
+            else
+                throw new Exception("Error al exportar PDF");
+        }
+
         public async Task<int> Eliminar(int Cod)
         {
             var Resultado = await Http.DeleteAsync($"api/Eventos/Eliminar/{Cod}");

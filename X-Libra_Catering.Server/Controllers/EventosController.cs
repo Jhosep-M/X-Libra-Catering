@@ -1,5 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
 using X_Libra_Catering.Server.Data;
 using X_Libra_Catering.Server.Models;
 using X_Libra_Catering.Shared;
@@ -144,7 +147,7 @@ namespace X_Libra_Catering.Server.Controllers
             catch (Exception ex)
             {
                 RespuestaApi.EsCorrecto = false;
-                RespuestaApi.Mensaje = ex.Message;
+                RespuestaApi.Mensaje = $"{ex.Message} | Inner: {ex.InnerException?.Message}";
             }
             return Ok(RespuestaApi);
         }
@@ -179,7 +182,7 @@ namespace X_Libra_Catering.Server.Controllers
             catch (Exception ex)
             {
                 RespuestaApi.EsCorrecto = false;
-                RespuestaApi.Mensaje = ex.Message;
+                RespuestaApi.Mensaje = $"{ex.Message} | Inner: {ex.InnerException?.Message}";
             }
             return Ok(RespuestaApi);
         }
@@ -208,9 +211,80 @@ namespace X_Libra_Catering.Server.Controllers
             catch (Exception ex)
             {
                 RespuestaApi.EsCorrecto = false;
-                RespuestaApi.Mensaje = ex.Message;
+                RespuestaApi.Mensaje = $"{ex.Message} | Inner: {ex.InnerException?.Message}";
             }
             return Ok(RespuestaApi);
+        }
+
+        [HttpGet("ExportarPdf/{Cod}")]
+        public async Task<IActionResult> ExportarPdf(int Cod)
+        {
+            try
+            {
+                var entidad = await _context.Eventos.Include(e => e.Cliente).FirstOrDefaultAsync(e => e.Id == Cod);
+                if (entidad == null)
+                    return NotFound(new ResponseAPI<int> { EsCorrecto = false, Mensaje = "Evento no encontrado" });
+
+                QuestPDF.Settings.License = LicenseType.Community;
+
+                var pdf = Document.Create(container =>
+                {
+                    container.Page(page =>
+                    {
+                        page.Size(PageSizes.A4);
+                        page.Margin(40);
+                        page.DefaultTextStyle(x => x.FontSize(12));
+
+                        page.Header().Column(col =>
+                        {
+                            col.Item().Text("X-Libra Catering")
+                                .SemiBold().FontSize(24).FontColor(Colors.Blue.Darken3);
+                            col.Item().Text("Resumen de Evento")
+                                .FontSize(14).FontColor(Colors.Grey.Darken2);
+                            col.Item().LineHorizontal(1).LineColor(Colors.Grey.Lighten1);
+                        });
+
+                        page.Content().PaddingVertical(20).Column(col =>
+                        {
+                            col.Item().Table(table =>
+                            {
+                                table.ColumnsDefinition(c =>
+                                {
+                                    c.ConstantColumn(120);
+                                    c.RelativeColumn();
+                                });
+
+                                void Fila(string label, string? value)
+                                {
+                                    table.Cell().Text(label).SemiBold().FontColor(Colors.Grey.Darken2);
+                                    table.Cell().Text(value ?? "-");
+                                }
+
+                                Fila("Evento:", entidad.NombreEvento);
+                                Fila("Cliente:", entidad.Cliente?.Nombre);
+                                Fila("Tipo:", entidad.TipoEvento.ToString());
+                                Fila("Estado:", entidad.Estado.ToString());
+                                Fila("Fecha:", entidad.FechaEvento.ToString("dd/MM/yyyy HH:mm"));
+                                Fila("Ubicacion:", entidad.Ubicacion);
+                                Fila("Invitados:", entidad.NumInvitados.ToString());
+                            });
+                        });
+
+                        page.Footer().AlignCenter().Text(t =>
+                        {
+                            t.Span("Generado el ");
+                            t.Span(DateTime.Now.ToString("dd/MM/yyyy HH:mm")).SemiBold();
+                            t.Span(" | X-Libra Catering");
+                        });
+                    });
+                }).GeneratePdf();
+
+                return File(pdf, "application/pdf", $"Evento_{entidad.NombreEvento}_{entidad.Id}.pdf");
+            }
+            catch (Exception ex)
+            {
+                return Ok(new ResponseAPI<int> { EsCorrecto = false, Mensaje = ex.Message });
+            }
         }
 
         [HttpDelete("Eliminar/{Cod}")]
@@ -237,7 +311,7 @@ namespace X_Libra_Catering.Server.Controllers
             catch (Exception ex)
             {
                 RespuestaApi.EsCorrecto = false;
-                RespuestaApi.Mensaje = ex.Message;
+                RespuestaApi.Mensaje = $"{ex.Message} | Inner: {ex.InnerException?.Message}";
             }
             return Ok(RespuestaApi);
         }

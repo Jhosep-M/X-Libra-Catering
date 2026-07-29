@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using X_Libra_Catering.Server.Data;
 
@@ -11,9 +12,11 @@ using X_Libra_Catering.Server.Data;
 namespace X_Libra_Catering.Server.Migrations
 {
     [DbContext(typeof(BdXLibraCateringContext))]
-    partial class BdXLibraCateringContextModelSnapshot : ModelSnapshot
+    [Migration("20260728210521_AddImagenRutaToMenus")]
+    partial class AddImagenRutaToMenus
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -263,23 +266,9 @@ namespace X_Libra_Catering.Server.Migrations
                         .HasColumnType("decimal(8,2)")
                         .HasColumnName("CAPACIDAD_KG");
 
-                    b.Property<string>("Direccion")
-                        .HasMaxLength(200)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(200)")
-                        .HasColumnName("DIRECCION");
-
                     b.Property<bool>("Disponible")
                         .HasColumnType("bit")
                         .HasColumnName("DISPONIBLE");
-
-                    b.Property<double?>("Latitud")
-                        .HasColumnType("float")
-                        .HasColumnName("LATITUD");
-
-                    b.Property<double?>("Longitud")
-                        .HasColumnType("float")
-                        .HasColumnName("LONGITUD");
 
                     b.Property<string>("Marca")
                         .IsRequired()

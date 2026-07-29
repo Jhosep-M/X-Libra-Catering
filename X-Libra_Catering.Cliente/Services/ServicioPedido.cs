@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using X_Libra_Catering.Shared;
+using X_Libra_Catering.Shared.Enums;
 
 namespace X_Libra_Catering.Cliente.Services
 {
@@ -48,6 +49,14 @@ namespace X_Libra_Catering.Cliente.Services
                 return Respuesta.Valor;
             else
                 throw new Exception(Respuesta.Mensaje);
+        }
+
+        public async Task CambiarEstado(int id, EstadoPedido estado)
+        {
+            var response = await Http.PatchAsJsonAsync($"api/Pedidos/CambiarEstado/{id}", estado.ToString());
+            var Respuesta = await response.Content.ReadFromJsonAsync<ResponseAPI<int>>();
+            if (Respuesta == null || !Respuesta.EsCorrecto)
+                throw new Exception(Respuesta?.Mensaje ?? "Error al cambiar estado");
         }
 
         public async Task<int> Eliminar(int Cod)

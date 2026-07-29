@@ -52,6 +52,7 @@ namespace X_Libra_Catering.Server.Data
                 entity.Property(e => e.Categoria).HasColumnName("CATEGORIA").HasConversion<string>().HasMaxLength(20).IsUnicode(false);
                 entity.Property(e => e.Precio).HasColumnName("PRECIO").HasColumnType("decimal(10,2)");
                 entity.Property(e => e.RequiereRefrigeracion).HasColumnName("REQUIERE_REFRIGERACION");
+                entity.Property(e => e.ImagenRuta).HasColumnName("IMAGEN_RUTA").HasMaxLength(500).IsUnicode(false);
             });
 
             modelBuilder.Entity<Vehiculo>(entity =>
@@ -66,6 +67,9 @@ namespace X_Libra_Catering.Server.Data
                 entity.Property(e => e.CapacidadKg).HasColumnName("CAPACIDAD_KG").HasColumnType("decimal(8,2)");
                 entity.Property(e => e.TieneRefrigeracion).HasColumnName("TIENE_REFRIGERACION");
                 entity.Property(e => e.Disponible).HasColumnName("DISPONIBLE");
+                entity.Property(e => e.Direccion).HasColumnName("DIRECCION").HasMaxLength(200).IsUnicode(false);
+                entity.Property(e => e.Latitud).HasColumnName("LATITUD");
+                entity.Property(e => e.Longitud).HasColumnName("LONGITUD");
             });
 
             modelBuilder.Entity<PedidoCabecera>(entity =>

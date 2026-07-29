@@ -2,6 +2,7 @@
 @page "/vehiculo/{CodModificar:int}"
 @inject ServicioVehiculo ServVehiculo
 @inject NavigationManager ServNav
+@inject IJSRuntime JS
 
 <PageTitle>@Titulo</PageTitle>
 
@@ -33,11 +34,51 @@
         <InputCheckbox class="form-check-input" @bind-Value="dto.Disponible" />
         <label class="form-check-label">Disponible</label>
     </div>
+
+    <hr/>
+    <h5>Ubicacion (para mapa)</h5>
+    <div class="form-group">
+        <label>Direccion</label>
+        <div class="input-group">
+            <InputText class="form-control" @bind-Value="dto.Direccion" />
+            <button type="button" class="btn btn-outline" @onclick="BuscarDireccion" disabled="@string.IsNullOrWhiteSpace(dto.Direccion)">Buscar</button>
+        </div>
+    </div>
+
+    @if (mostrarMapa)
+    {
+        <div id="mapa-picker" class="map-container" style="height:300px;"></div>
+        <div class="toolbar" style="margin-top:8px;">
+            <button type="button" class="btn btn-primary" @onclick="AplicarCoordenadas">✓ Aplicar posicion del mapa</button>
+            <button type="button" class="btn btn-outline" @onclick="CerrarMapa">Cancelar</button>
+        </div>
+    }
+    else
+    {
+        <button type="button" class="btn btn-outline" @onclick="AbrirMapa">📍 Ubicar en mapa</button>
+    }
+
+    <div class="form-row">
+        <div class="form-group form-group-half">
+            <label>Latitud</label>
+            <InputNumber class="form-control" @bind-Value="dto.Latitud" />
+        </div>
+        <div class="form-group form-group-half">
+            <label>Longitud</label>
+            <InputNumber class="form-control" @bind-Value="dto.Longitud" />
+        </div>
+    </div>
+
     <br />
     <button type="submit" class="btn btn-primary">@TextoBoton</button>
     <a href="vehiculos" class="btn btn-secondary">Cancelar</a>
 </EditForm>
 </div>
+
+@if (!string.IsNullOrWhiteSpace(mensajeMapa))
+{
+    <div class="alert alert-warning">@mensajeMapa</div>
+}
 
 @code {
     [Parameter]
@@ -46,6 +87,8 @@
     private VehiculoDTO dto = new();
     private string Titulo = "Nuevo Vehiculo";
     private string TextoBoton = "Guardar";
+    private bool mostrarMapa;
+    private string? mensajeMapa;
 
     protected override async Task OnInitializedAsync()
     {
@@ -64,6 +107,82 @@
         }
     }
 
+    private async Task AbrirMapa()
+    {
+        mostrarMapa = true;
+        mensajeMapa = null;
+        StateHasChanged();
+        await Task.Delay(100);
+        await CargarMapaPicker();
+    }
+
+    private void CerrarMapa()
+    {
+        mostrarMapa = false;
+    }
+
+    private async Task CargarMapaPicker()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("mapaApp.iniciarPicker", "mapa-picker", dto.Latitud ?? 0, dto.Longitud ?? 0);
+        }
+        catch (Exception ex)
+        {
+            mensajeMapa = $"Error: {ex.Message}";
+            StateHasChanged();
+        }
+    }
+
+    private async Task AplicarCoordenadas()
+    {
+        try
+        {
+            var pos = await JS.InvokeAsync<PosicionMapa>("mapaApp.obtenerPosicionPicker");
+            if (pos != null)
+            {
+                dto.Latitud = pos.lat;
+                dto.Longitud = pos.lng;
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            mensajeMapa = $"Error: {ex.Message}";
+            StateHasChanged();
+        }
+    }
+
+    private async Task BuscarDireccion()
+    {
+        if (string.IsNullOrWhiteSpace(dto.Direccion)) return;
+        try
+        {
+            var resultado = await JS.InvokeAsync<GeoResult>("mapaApp.geocodificar", dto.Direccion);
+            if (resultado != null)
+            {
+                dto.Latitud = resultado.lat;
+                dto.Longitud = resultado.lng;
+                dto.Direccion = resultado.direccion;
+                mensajeMapa = null;
+                mostrarMapa = true;
+                StateHasChanged();
+                await Task.Delay(100);
+                await JS.InvokeVoidAsync("mapaApp.iniciarPicker", "mapa-picker", dto.Latitud ?? 0, dto.Longitud ?? 0);
+            }
+            else
+            {
+                mensajeMapa = "No se encontró la dirección. Intenta con otra.";
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            mensajeMapa = $"Error al buscar: {ex.Message}";
+            StateHasChanged();
+        }
+    }
+
     private async Task Guardar()
     {
         try
@@ -78,5 +197,18 @@
         {
             Console.WriteLine($"Error: {ex.Message}");
         }
+    }
+
+    private class GeoResult
+    {
+        public double lat { get; set; }
+        public double lng { get; set; }
+        public string direccion { get; set; } = "";
+    }
+
+    private class PosicionMapa
+    {
+        public double lat { get; set; }
+        public double lng { get; set; }
     }
 }

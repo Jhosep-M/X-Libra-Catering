@@ -1,66 +1,176 @@
 @page "/vehiculos"
 @inject ServicioVehiculo ServVehiculo
 @inject NavigationManager ServNav
+@inject IJSRuntime JS
 
 <PageTitle>Vehiculos</PageTitle>
 
-<h3>Listado de Vehiculos</h3>
+<div class="page-header">
+    <div>
+        <h3>Vehiculos</h3>
+        <p class="text-muted">Flota de transporte disponible</p>
+    </div>
+    <div class="header-actions">
+        <button class="btn btn-outline" @onclick="ToggleVista">
+            @(vistaMapa ? "Ver Tarjetas" : "Ver Mapa")
+        </button>
+        <a href="vehiculo" class="btn btn-primary">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+            </svg>
+            Agregar Vehiculo
+        </a>
+    </div>
+</div>
 
-<p>
-    <a href="vehiculo" class="btn btn-primary">Agregar</a>
-</p>
+<div class="kpi-strip">
+    <div class="kpi-strip-item">
+        🚛 Total: <strong>@lista.Count</strong>
+    </div>
+    <div class="kpi-strip-item">
+        <span class="kpi-dot green"></span> Disponibles: <strong>@lista.Count(v => v.Disponible)</strong>
+    </div>
+    <div class="kpi-strip-item">
+        <span class="kpi-dot red"></span> Ocupados: <strong>@lista.Count(v => !v.Disponible)</strong>
+    </div>
+</div>
 
-<table class="table" align="center" width="80%" border="1">
-    <thead>
-        <tr>
-            <th>Id</th>
-            <th>Marca</th>
-            <th>Modelo</th>
-            <th>Placa</th>
-            <th>Capacidad (Kg)</th>
-            <th>Refrigeracion</th>
-            <th>Disponible</th>
-            <th>Acciones</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in lista)
-        {
-            <tr>
-                <td>@item.Id</td>
-                <td>@item.Marca</td>
-                <td>@item.Modelo</td>
-                <td>@item.Placa</td>
-                <td>@item.CapacidadKg</td>
-                <td>@(item.TieneRefrigeracion ? "Si" : "No")</td>
-                <td>@(item.Disponible ? "Si" : "No")</td>
-                <td>
-                    <a href="vehiculo/@item.Id" class="btn btn-sm btn-warning">Modificar</a>
-                    <button class="btn btn-sm btn-danger" @onclick="() => Eliminar(item.Id)">Eliminar</button>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+<div class="toolbar">
+    <div class="search-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="text" class="search-input" placeholder="Buscar por marca, modelo o placa..."
+               @bind="filtroTexto" @bind:event="oninput" />
+    </div>
+    <select class="filter-select" @bind="filtroDisponible">
+        <option value="">Todos</option>
+        <option value="disponible">Disponibles</option>
+        <option value="ocupado">Ocupados</option>
+    </select>
+    <span class="result-count">@vehiculosFiltrados.Count() vehiculos</span>
+</div>
+
+@if (vistaMapa)
+{
+    <div id="mapa-vehiculos" class="map-container"></div>
+}
+
+@if (!vistaMapa)
+{
+    if (!vehiculosFiltrados.Any())
+    {
+        <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+            </svg>
+            <h4>No hay vehiculos registrados</h4>
+            <p>Agrega tu primer vehiculo a la flota.</p>
+        </div>
+    }
+    else
+    {
+        <div class="card-grid">
+            @foreach (var item in vehiculosFiltrados)
+            {
+                <div class="vehicle-card">
+                    <div class="vehicle-top">
+                        <span class="vehicle-icon">🚚</span>
+                        <h5>@item.Marca @item.Modelo</h5>
+                    </div>
+                    <div class="vehicle-details">
+                        <span class="vehicle-plate">@item.Placa</span>
+                        <span class="detail-item">📦 @item.CapacidadKg kg</span>
+                        <span class="detail-item">🧊 Refrigeracion: @(item.TieneRefrigeracion ? "Si" : "No")</span>
+                        @if (!string.IsNullOrWhiteSpace(item.Direccion))
+                        {
+                            <span class="detail-item">📍 @item.Direccion</span>
+                        }
+                    </div>
+                    <div class="vehicle-status @(item.Disponible ? "disponible" : "ocupado")">
+                        <span>●</span>
+                        @(item.Disponible ? "Disponible" : "Ocupado")
+                    </div>
+                    <div class="card-footer-actions">
+                        <a href="vehiculo/@item.Id" class="btn-icon btn-icon-edit" title="Editar">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                            </svg>
+                        </a>
+                        <button class="btn-icon btn-icon-delete" title="Eliminar" @onclick="() => Eliminar(item.Id)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="3 6 5 6 21 6"/>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+}
 
 @code {
     private List<VehiculoDTO> lista = new();
+    private string? filtroTexto;
+    private string? filtroDisponible;
+    private bool vistaMapa;
+
+    private IEnumerable<VehiculoDTO> vehiculosFiltrados => lista
+        .Where(v => string.IsNullOrWhiteSpace(filtroTexto) ||
+                     (v.Marca?.Contains(filtroTexto, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                     (v.Modelo?.Contains(filtroTexto, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                     (v.Placa?.Contains(filtroTexto, StringComparison.OrdinalIgnoreCase) ?? false))
+        .Where(v => filtroDisponible switch
+        {
+            "disponible" => v.Disponible,
+            "ocupado" => !v.Disponible,
+            _ => true
+        });
 
     protected override async Task OnInitializedAsync()
     {
         await CargarLista();
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (vistaMapa && firstRender)
+        {
+            await InicializarMapa();
+        }
+    }
+
     private async Task CargarLista()
     {
-        try
+        try { lista = await ServVehiculo.Lista(); }
+        catch (Exception ex) { Console.WriteLine($"Error: {ex.Message}"); }
+    }
+
+    private async Task ToggleVista()
+    {
+        vistaMapa = !vistaMapa;
+        if (vistaMapa)
         {
-            lista = await ServVehiculo.Lista();
+            StateHasChanged();
+            await Task.Delay(100);
+            await InicializarMapa();
         }
-        catch (Exception ex)
+    }
+
+    private async Task InicializarMapa()
+    {
+        await Task.Delay(100);
+        var vehiculosMapa = lista.Select(v => new
         {
-            Console.WriteLine($"Error: {ex.Message}");
-        }
+            v.Id, v.Marca, v.Modelo, v.Placa, v.CapacidadKg,
+            v.TieneRefrigeracion, v.Disponible, v.Direccion,
+            v.Latitud, v.Longitud
+        }).ToList();
+
+        await JS.InvokeVoidAsync("mapaApp.inicializar", "mapa-vehiculos", vehiculosMapa);
     }
 
     private async Task Eliminar(int Cod)
@@ -70,9 +180,7 @@
             await ServVehiculo.Eliminar(Cod);
             await CargarLista();
         }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error: {ex.Message}");
-        }
+        catch (Exception ex) { Console.WriteLine($"Error: {ex.Message}"); }
     }
+
 }

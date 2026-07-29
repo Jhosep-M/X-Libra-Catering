@@ -10,6 +10,7 @@ namespace X_Libra_Catering.Server.Models
         public CategoriaMenu Categoria { get; set; }
         public decimal Precio { get; set; }
         public bool RequiereRefrigeracion { get; set; }
+        public string? ImagenRuta { get; set; }
         public virtual ICollection<PedidoDetalle> PedidoDetalles { get; set; } = new List<PedidoDetalle>();
     }
 }

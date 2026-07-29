@@ -1,48 +1,103 @@
 @page "/menus"
+@using X_Libra_Catering.Shared.Enums
 @inject ServicioMenu ServMenu
 @inject NavigationManager ServNav
 
 <PageTitle>Menus</PageTitle>
 
-<h3>Listado de Menus</h3>
+<div class="page-header">
+    <div>
+        <h3>Menus</h3>
+        <p class="text-muted">Catalogo de platillos y bebidas</p>
+    </div>
+    <a href="menu" class="btn btn-primary">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+        </svg>
+        Agregar Menu
+    </a>
+</div>
 
-<p>
-    <a href="menu" class="btn btn-primary">Agregar</a>
-</p>
+<div class="toolbar">
+    <div class="search-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="text" class="search-input" placeholder="Buscar por nombre..."
+               @bind="filtroTexto" @bind:event="oninput" />
+    </div>
+    <select class="filter-select" @bind="filtroCategoria">
+        <option value="">Todas las categorias</option>
+        <option value="Entrada">Entrada</option>
+        <option value="PlatoFuerte">Plato Fuerte</option>
+        <option value="Postre">Postre</option>
+        <option value="Bebida">Bebida</option>
+    </select>
+    <span class="result-count">@menusFiltrados.Count() menus</span>
+</div>
 
-<table class="table" align="center" width="80%" border="1">
-    <thead>
-        <tr>
-            <th>Id</th>
-            <th>Nombre</th>
-            <th>Descripcion</th>
-            <th>Categoria</th>
-            <th>Precio</th>
-            <th>Refrigeracion</th>
-            <th>Acciones</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in lista)
+@if (!menusFiltrados.Any())
+{
+    <div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M12 20h9"/>
+            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+        </svg>
+        <h4>No hay menus registrados</h4>
+        <p>Agrega tu primer menu al catalogo.</p>
+    </div>
+}
+else
+{
+    <div class="card-grid">
+        @foreach (var item in menusFiltrados)
         {
-            <tr>
-                <td>@item.Id</td>
-                <td>@item.Nombre</td>
-                <td>@item.Descripcion</td>
-                <td>@item.Categoria</td>
-                <td>@item.Precio.ToString("C")</td>
-                <td>@(item.RequiereRefrigeracion ? "Si" : "No")</td>
-                <td>
-                    <a href="menu/@item.Id" class="btn btn-sm btn-warning">Modificar</a>
-                    <button class="btn btn-sm btn-danger" @onclick="() => Eliminar(item.Id)">Eliminar</button>
-                </td>
-            </tr>
+            <div class="menu-card">
+                @if (!string.IsNullOrEmpty(item.ImagenRuta))
+                {
+                    <div class="menu-img" style="background-image:url(@($"{UrlHelper.Servidor}{item.ImagenRuta}"))"></div>
+                }
+                else
+                {
+                    <div class="menu-icon">@ObtenerIconoCategoria(item.Categoria)</div>
+                }
+                <h5>@item.Nombre</h5>
+                <p class="menu-desc">@item.Descripcion</p>
+                <div class="menu-meta">
+                    <span class="badge-categoria @item.Categoria.ToString().ToLower()">@item.Categoria</span>
+                    <span class="menu-price">@MonedaHelper.Formatear(item.Precio)</span>
+                </div>
+                <div style="font-size:var(--font-size-xs);color:var(--color-muted);margin-bottom:10px;">
+                    🧊 Refrigeracion: @(item.RequiereRefrigeracion ? "Si" : "No")
+                </div>
+                <div class="card-footer-actions">
+                    <a href="menu/@item.Id" class="btn-icon btn-icon-edit" title="Editar">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                    </a>
+                    <button class="btn-icon btn-icon-delete" title="Eliminar" @onclick="() => Eliminar(item.Id)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6"/>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
         }
-    </tbody>
-</table>
+    </div>
+}
 
 @code {
     private List<MenuDTO> lista = new();
+    private string? filtroTexto;
+    private string? filtroCategoria;
+
+    private IEnumerable<MenuDTO> menusFiltrados => lista
+        .Where(m => string.IsNullOrWhiteSpace(filtroTexto) ||
+                     (m.Nombre?.Contains(filtroTexto, StringComparison.OrdinalIgnoreCase) ?? false))
+        .Where(m => string.IsNullOrEmpty(filtroCategoria) || m.Categoria.ToString() == filtroCategoria);
 
     protected override async Task OnInitializedAsync()
     {
@@ -51,14 +106,8 @@
 
     private async Task CargarLista()
     {
-        try
-        {
-            lista = await ServMenu.Lista();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error: {ex.Message}");
-        }
+        try { lista = await ServMenu.Lista(); }
+        catch (Exception ex) { Console.WriteLine($"Error: {ex.Message}"); }
     }
 
     private async Task Eliminar(int Cod)
@@ -68,9 +117,15 @@
             await ServMenu.Eliminar(Cod);
             await CargarLista();
         }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error: {ex.Message}");
-        }
+        catch (Exception ex) { Console.WriteLine($"Error: {ex.Message}"); }
     }
+
+    private string ObtenerIconoCategoria(CategoriaMenu categoria) => categoria switch
+    {
+        CategoriaMenu.Entrada => "\U0001F957",
+        CategoriaMenu.PlatoFuerte => "\U0001F37D",
+        CategoriaMenu.Postre => "\U0001F370",
+        CategoriaMenu.Bebida => "\U0001F964",
+        _ => "\U0001F372"
+    };
 }

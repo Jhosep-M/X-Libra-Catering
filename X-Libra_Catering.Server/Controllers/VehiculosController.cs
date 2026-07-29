@@ -24,16 +24,19 @@ namespace X_Libra_Catering.Server.Controllers
             try
             {
                 var lista = await _context.Vehiculos.ToListAsync();
-                var listaDTO = lista.Select(v => new VehiculoDTO
-                {
-                    Id = v.Id,
-                    Marca = v.Marca,
-                    Modelo = v.Modelo,
-                    Placa = v.Placa,
-                    CapacidadKg = v.CapacidadKg,
-                    TieneRefrigeracion = v.TieneRefrigeracion,
-                    Disponible = v.Disponible
-                }).ToList();
+                    var listaDTO = lista.Select(v => new VehiculoDTO
+                    {
+                        Id = v.Id,
+                        Marca = v.Marca,
+                        Modelo = v.Modelo,
+                        Placa = v.Placa,
+                        CapacidadKg = v.CapacidadKg,
+                        TieneRefrigeracion = v.TieneRefrigeracion,
+                        Disponible = v.Disponible,
+                        Direccion = v.Direccion,
+                        Latitud = v.Latitud,
+                        Longitud = v.Longitud
+                    }).ToList();
                 RespuestaApi.EsCorrecto = true;
                 RespuestaApi.Valor = listaDTO;
                 RespuestaApi.Mensaje = "Lista preparada";
@@ -69,7 +72,10 @@ namespace X_Libra_Catering.Server.Controllers
                         Placa = entidad.Placa,
                         CapacidadKg = entidad.CapacidadKg,
                         TieneRefrigeracion = entidad.TieneRefrigeracion,
-                        Disponible = entidad.Disponible
+                        Disponible = entidad.Disponible,
+                        Direccion = entidad.Direccion,
+                        Latitud = entidad.Latitud,
+                        Longitud = entidad.Longitud
                     };
                     RespuestaApi.Mensaje = "Vehiculo encontrado";
                 }
@@ -95,7 +101,10 @@ namespace X_Libra_Catering.Server.Controllers
                     Placa = dto.Placa,
                     CapacidadKg = dto.CapacidadKg,
                     TieneRefrigeracion = dto.TieneRefrigeracion,
-                    Disponible = dto.Disponible
+                    Disponible = dto.Disponible,
+                    Direccion = dto.Direccion,
+                    Latitud = dto.Latitud,
+                    Longitud = dto.Longitud
                 };
                 _context.Vehiculos.Add(entidad);
                 await _context.SaveChangesAsync();
@@ -131,6 +140,9 @@ namespace X_Libra_Catering.Server.Controllers
                     entidad.CapacidadKg = dto.CapacidadKg;
                     entidad.TieneRefrigeracion = dto.TieneRefrigeracion;
                     entidad.Disponible = dto.Disponible;
+                    entidad.Direccion = dto.Direccion;
+                    entidad.Latitud = dto.Latitud;
+                    entidad.Longitud = dto.Longitud;
                     await _context.SaveChangesAsync();
                     RespuestaApi.EsCorrecto = true;
                     RespuestaApi.Valor = entidad.Id;

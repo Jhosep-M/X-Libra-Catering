@@ -1,3 +1,17 @@
+### Task 2: Clientes — Tarjetero / Directorio
+
+**Files:**
+- Modify: `X-Libra_Catering.Cliente/Pages/Clientes.razor`
+
+**Interfaces:**
+- Consumes: `.page-header`, `.toolbar`, `.card-grid`, `.contact-card`, `.contact-avatar`, `.contact-body`, `.contact-info`, `.card-footer-actions`, `.btn-icon`, `.btn-icon-edit`, `.btn-icon-delete`, `.empty-state` (CSS from Task 1, already in app.css)
+- Produces: Página `@page "/clientes"` funcional con búsqueda y grid de contactos
+
+- [ ] **Step 1: Reescribir Clientes.razor**
+
+Replace the entire file content with:
+
+```razor
 @page "/clientes"
 @inject ServicioCliente ServCliente
 @inject NavigationManager ServNav
@@ -47,7 +61,7 @@ else
         @foreach (var item in clientesFiltrados)
         {
             <div class="contact-card">
-                <div class="contact-avatar">@(item.Nombre?[0] ?? '?')</div>
+                <div class="contact-avatar">@item.Nombre[0]</div>
                 <div class="contact-body">
                     <h5>@item.Nombre</h5>
                     <div class="contact-info">
@@ -98,9 +112,9 @@ else
 
     private IEnumerable<ClienteDTO> clientesFiltrados => lista
         .Where(c => string.IsNullOrWhiteSpace(filtroTexto) ||
-                     (c.Nombre?.Contains(filtroTexto, StringComparison.OrdinalIgnoreCase) ?? false) ||
-                     (c.Telefono?.Contains(filtroTexto, StringComparison.OrdinalIgnoreCase) ?? false) ||
-                     (c.Email?.Contains(filtroTexto, StringComparison.OrdinalIgnoreCase) ?? false));
+                     c.Nombre.Contains(filtroTexto, StringComparison.OrdinalIgnoreCase) ||
+                     c.Telefono.Contains(filtroTexto, StringComparison.OrdinalIgnoreCase) ||
+                     c.Email.Contains(filtroTexto, StringComparison.OrdinalIgnoreCase));
 
     protected override async Task OnInitializedAsync()
     {
@@ -123,3 +137,9 @@ else
         catch (Exception ex) { Console.WriteLine($"Error: {ex.Message}"); }
     }
 }
+```
+
+- [ ] **Step 2: Build to verify**
+
+Run: `dotnet build "X-Libra_Catering.Cliente/X-Libra_Catering.Cliente.csproj"`
+Expected: Build succeeded, 0 errors

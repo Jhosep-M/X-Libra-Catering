@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using X_Libra_Catering.Server.Data;
+using X_Libra_Catering.Server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,6 +10,7 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<BdXLibraCateringContext>(opcion =>
     opcion.UseSqlServer(builder.Configuration.GetConnectionString("CadenaSQL")));
+builder.Services.AddScoped<IEmailService, EmailService>();
 
 builder.Services.AddCors(opcion =>
 {
@@ -25,6 +27,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseStaticFiles();
 
 app.UseCors("NuevaPolitica");
 

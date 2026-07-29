@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using X_Libra_Catering.Server.Data;
 using X_Libra_Catering.Server.Models;
 using X_Libra_Catering.Shared;
+using X_Libra_Catering.Server.Services;
 
 namespace X_Libra_Catering.Server.Controllers
 {
@@ -11,10 +12,12 @@ namespace X_Libra_Catering.Server.Controllers
     public class ClientesController : ControllerBase
     {
         private readonly BdXLibraCateringContext _context;
+        private readonly IEmailService _emailService;
 
-        public ClientesController(BdXLibraCateringContext context)
+        public ClientesController(BdXLibraCateringContext context, IEmailService emailService)
         {
             _context = context;
+            _emailService = emailService;
         }
 
         [HttpGet("Lista")]
@@ -93,6 +96,13 @@ namespace X_Libra_Catering.Server.Controllers
                 };
                 _context.Clientes.Add(entidad);
                 await _context.SaveChangesAsync();
+
+                if (!string.IsNullOrWhiteSpace(entidad.Email))
+                {
+                    try { await _emailService.EnviarBienvenida(entidad.Email, entidad.Nombre); }
+                    catch { /* el email no debe impedir guardar el cliente */ }
+                }
+
                 RespuestaApi.EsCorrecto = true;
                 RespuestaApi.Valor = entidad.Id;
                 RespuestaApi.Mensaje = "Cliente guardado";
