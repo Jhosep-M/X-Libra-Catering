@@ -1,0 +1,134 @@
+@page "/dashboard"
+@inject ServicioDashboard ServDashboard
+@inject IJSRuntime JS
+@inject ServicioNotificacion Notificacion
+
+<PageTitle>Dashboard</PageTitle>
+
+<LoadingSpinner Visible="cargando" Mensaje="Cargando dashboard..." />
+
+<div class="page-header">
+    <div>
+        <h3>Dashboard</h3>
+        <p class="text-muted">Resumen general del negocio</p>
+    </div>
+</div>
+
+<div class="dashboard-grid">
+    <div class="kpi-card">
+        <div class="kpi-icon" style="background:#e8f3f5">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#1a7a8a" stroke-width="2">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+        </div>
+        <div class="kpi-value">@datos.TotalEventos</div>
+        <div class="kpi-label">Total Eventos</div>
+        <div class="kpi-sub">@datos.EventosPendientes pendientes</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-icon" style="background:#fef3c7">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>
+        </div>
+        <div class="kpi-value">@datos.TotalPedidos</div>
+        <div class="kpi-label">Total Pedidos</div>
+        <div class="kpi-sub">@datos.PedidosEntregados entregados</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-icon" style="background:#e8f5e9">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2">
+                <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+            </svg>
+        </div>
+        <div class="kpi-value">@datos.VehiculosDisponibles / @datos.VehiculosTotales</div>
+        <div class="kpi-label">Vehículos Disponibles</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-icon" style="background:#f3e8ff">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2">
+                <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+        </div>
+        <div class="kpi-value">$@datos.IngresosMes.ToString("N2")</div>
+        <div class="kpi-label">Ingresos del Mes</div>
+    </div>
+</div>
+
+<div class="dashboard-charts">
+    <div class="chart-card">
+        <h4>Eventos por Mes</h4>
+        <canvas id="chartEventos" width="400" height="250"></canvas>
+    </div>
+    <div class="chart-card">
+        <h4>Pedidos por Estado</h4>
+        <canvas id="chartPedidos" width="400" height="250"></canvas>
+    </div>
+    <div class="chart-card full-width">
+        <h4>Ingresos por Mes</h4>
+        <canvas id="chartIngresos" width="800" height="250"></canvas>
+    </div>
+</div>
+
+@code {
+    private bool cargando;
+    private DashboardCompletoDTO datos = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarDatos();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && datos.EventosPorMes.Any())
+        {
+            await RenderizarGraficos();
+        }
+    }
+
+    private async Task CargarDatos()
+    {
+        cargando = true;
+        StateHasChanged();
+        try
+        {
+            datos = await ServDashboard.ObtenerDatos();
+        }
+        catch (Exception ex)
+        {
+            Notificacion.Mostrar($"Error al cargar dashboard: {ex.Message}", ServicioNotificacion.Tipo.Error);
+        }
+        finally
+        {
+            cargando = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task RenderizarGraficos()
+    {
+        var jsModule = await JS.InvokeAsync<IJSObjectReference>("import", "./js/dashboard-charts.js");
+
+        if (datos.EventosPorMes.Any())
+        {
+            var labels = datos.EventosPorMes.Select(e => e.Label).ToArray();
+            var valores = datos.EventosPorMes.Select(e => (double)e.Valor).ToArray();
+            await JS.InvokeVoidAsync("crearGraficoBarras", "chartEventos", labels, valores, "Eventos");
+        }
+
+        if (datos.PedidosPorEstado.Any())
+        {
+            var labels = datos.PedidosPorEstado.Select(e => e.Label).ToArray();
+            var valores = datos.PedidosPorEstado.Select(e => (double)e.Valor).ToArray();
+            await JS.InvokeVoidAsync("crearGraficoDona", "chartPedidos", labels, valores);
+        }
+
+        if (datos.IngresosPorMes.Any())
+        {
+            var labels = datos.IngresosPorMes.Select(e => e.Label).ToArray();
+            var valores = datos.IngresosPorMes.Select(e => (double)e.Valor).ToArray();
+            await JS.InvokeVoidAsync("crearGraficoBarras", "chartIngresos", labels, valores, "Ingresos ($)");
+        }
+    }
+}
