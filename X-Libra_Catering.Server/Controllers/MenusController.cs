@@ -19,26 +19,46 @@ namespace X_Libra_Catering.Server.Controllers
         }
 
         [HttpGet("Lista")]
-        public async Task<IActionResult> Lista()
+        public async Task<IActionResult> Lista([FromQuery] int pagina = 1, [FromQuery] int tamano = 20, [FromQuery] string? busqueda = null)
         {
-            var RespuestaApi = new ResponseAPI<List<MenuDTO>>();
+            var RespuestaApi = new ResponseAPI<ResultadoPaginado<MenuDTO>>();
             try
             {
-                var lista = await _context.Menus.Where(m => m.Activo).ToListAsync();
-                var listaDTO = lista.Select(m => new MenuDTO
-                {
-                    Id = m.Id,
-                    Nombre = m.Nombre,
-                    Descripcion = m.Descripcion,
-                    Categoria = m.Categoria,
-                    Precio = m.Precio,
-                    RequiereRefrigeracion = m.RequiereRefrigeracion,
-                    ImagenRuta = m.ImagenRuta,
-                    FechaCreacion = m.FechaCreacion,
-                    FechaModificacion = m.FechaModificacion
-                }).ToList();
+                var query = _context.Menus.Where(m => m.Activo).AsQueryable();
+
+                if (!string.IsNullOrWhiteSpace(busqueda))
+                    query = query.Where(m =>
+                        m.Nombre.Contains(busqueda) ||
+                        (m.Descripcion != null && m.Descripcion.Contains(busqueda)));
+
+                var total = await query.CountAsync();
+
+                var items = await query
+                    .OrderBy(m => m.Nombre)
+                    .Skip((pagina - 1) * tamano)
+                    .Take(tamano)
+                    .Select(m => new MenuDTO
+                    {
+                        Id = m.Id,
+                        Nombre = m.Nombre,
+                        Descripcion = m.Descripcion,
+                        Categoria = m.Categoria,
+                        Precio = m.Precio,
+                        RequiereRefrigeracion = m.RequiereRefrigeracion,
+                        ImagenRuta = m.ImagenRuta,
+                        FechaCreacion = m.FechaCreacion,
+                        FechaModificacion = m.FechaModificacion
+                    })
+                    .ToListAsync();
+
                 RespuestaApi.EsCorrecto = true;
-                RespuestaApi.Valor = listaDTO;
+                RespuestaApi.Valor = new ResultadoPaginado<MenuDTO>
+                {
+                    Items = items,
+                    Total = total,
+                    Pagina = pagina,
+                    Tamano = tamano
+                };
                 RespuestaApi.Mensaje = "Lista preparada";
             }
             catch (Exception ex)

@@ -162,7 +162,8 @@ else
         StateHasChanged();
         try
         {
-            lista = await ServPedido.Lista();
+            var resultado = await ServPedido.Lista(1, 9999);
+            lista = resultado.Items;
         }
         catch (Exception ex)
         {

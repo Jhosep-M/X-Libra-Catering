@@ -20,18 +20,32 @@ namespace X_Libra_Catering.Server.Controllers
         }
 
         [HttpGet("Lista")]
-        public async Task<IActionResult> Lista()
+        public async Task<IActionResult> Lista([FromQuery] int pagina = 1, [FromQuery] int tamano = 20, [FromQuery] string? busqueda = null)
         {
-            var RespuestaApi = new ResponseAPI<List<PedidoCabeceraDTO>>();
+            var RespuestaApi = new ResponseAPI<ResultadoPaginado<PedidoCabeceraDTO>>();
             try
             {
-                var lista = await _context.PedidoCabeceras
+                var query = _context.PedidoCabeceras
                     .Include(p => p.Evento)
                     .Include(p => p.Vehiculo)
                     .Include(p => p.Detalles)
                     .ThenInclude(d => d.Menu)
+                    .AsQueryable();
+
+                if (!string.IsNullOrWhiteSpace(busqueda))
+                    query = query.Where(p =>
+                        (p.Evento != null && p.Evento.NombreEvento.Contains(busqueda)) ||
+                        (p.Vehiculo != null && p.Vehiculo.Placa.Contains(busqueda)));
+
+                var total = await query.CountAsync();
+
+                var items = await query
+                    .OrderByDescending(p => p.FechaPedido)
+                    .Skip((pagina - 1) * tamano)
+                    .Take(tamano)
                     .ToListAsync();
-                var listaDTO = lista.Select(p => new PedidoCabeceraDTO
+
+                var listaDTO = items.Select(p => new PedidoCabeceraDTO
                 {
                     Id = p.Id,
                     EventoId = p.EventoId,
@@ -56,8 +70,15 @@ namespace X_Libra_Catering.Server.Controllers
                         FechaModificacion = d.FechaModificacion
                     }).ToList()
                 }).ToList();
+
                 RespuestaApi.EsCorrecto = true;
-                RespuestaApi.Valor = listaDTO;
+                RespuestaApi.Valor = new ResultadoPaginado<PedidoCabeceraDTO>
+                {
+                    Items = listaDTO,
+                    Total = total,
+                    Pagina = pagina,
+                    Tamano = tamano
+                };
                 RespuestaApi.Mensaje = "Lista preparada";
             }
             catch (Exception ex)

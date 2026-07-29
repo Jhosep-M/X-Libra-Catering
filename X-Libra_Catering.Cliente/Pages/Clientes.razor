@@ -26,12 +26,13 @@
             <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
         </svg>
         <input type="text" class="search-input" placeholder="Buscar por nombre, telefono o email..."
-               @bind="filtroTexto" @bind:event="oninput" />
+               @bind="busqueda" @bind:event="oninput" />
+        <button class="btn btn-outline btn-sm" @onclick="() => CargarLista()">Buscar</button>
     </div>
-    <span class="result-count">@clientesFiltrados.Count() clientes</span>
+    <span class="result-count">@resultado.Total clientes</span>
 </div>
 
-@if (!clientesFiltrados.Any())
+@if (!resultado.Items.Any() && !cargando)
 {
     <div class="empty-state">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -47,7 +48,7 @@
 else
 {
     <div class="card-grid">
-        @foreach (var item in clientesFiltrados)
+        @foreach (var item in resultado.Items)
         {
             <div class="contact-card">
                 <div class="contact-avatar">@(item.Nombre?[0] ?? '?')</div>
@@ -93,18 +94,22 @@ else
             </div>
         }
     </div>
+
+    @if (resultado.TotalPaginas > 1)
+    {
+        <div class="paginacion">
+            <button class="btn btn-outline" disabled="@(resultado.Pagina <= 1)" @onclick="() => CambiarPagina(resultado.Pagina - 1)">←</button>
+            <span>@resultado.Pagina de @resultado.TotalPaginas</span>
+            <button class="btn btn-outline" disabled="@(resultado.Pagina >= resultado.TotalPaginas)" @onclick="() => CambiarPagina(resultado.Pagina + 1)">→</button>
+            <span class="text-muted">(@resultado.Total registros)</span>
+        </div>
+    }
 }
 
 @code {
     private bool cargando;
-    private List<ClienteDTO> lista = new();
-    private string? filtroTexto;
-
-    private IEnumerable<ClienteDTO> clientesFiltrados => lista
-        .Where(c => string.IsNullOrWhiteSpace(filtroTexto) ||
-                     (c.Nombre?.Contains(filtroTexto, StringComparison.OrdinalIgnoreCase) ?? false) ||
-                     (c.Telefono?.Contains(filtroTexto, StringComparison.OrdinalIgnoreCase) ?? false) ||
-                     (c.Email?.Contains(filtroTexto, StringComparison.OrdinalIgnoreCase) ?? false));
+    private string? busqueda;
+    private ResultadoPaginado<ClienteDTO> resultado = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -117,7 +122,27 @@ else
         StateHasChanged();
         try
         {
-            lista = await ServCliente.Lista();
+            resultado = await ServCliente.Lista(1, 20, busqueda);
+        }
+        catch (Exception ex)
+        {
+            Notificacion.Mostrar($"Error: {ex.Message}", ServicioNotificacion.Tipo.Error);
+        }
+        finally
+        {
+            cargando = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task CambiarPagina(int pag)
+    {
+        if (pag < 1 || pag > resultado.TotalPaginas) return;
+        cargando = true;
+        StateHasChanged();
+        try
+        {
+            resultado = await ServCliente.Lista(pag, 20, busqueda);
         }
         catch (Exception ex)
         {

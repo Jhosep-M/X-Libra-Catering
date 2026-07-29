@@ -87,7 +87,8 @@
         {
             try
             {
-                clientes = await ServCliente.Lista();
+                var resultado = await ServCliente.Lista(1, 9999);
+                clientes = resultado.Items;
             }
             catch (Exception ex)
             {

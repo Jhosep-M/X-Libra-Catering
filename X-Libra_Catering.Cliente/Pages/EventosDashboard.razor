@@ -228,7 +228,8 @@
         try
         {
             kpi = await ServEvento.ObtenerKpi();
-            todosEventos = await ServEvento.Lista();
+            var resultado = await ServEvento.Lista(1, 9999);
+            todosEventos = resultado.Items;
         }
         catch (Exception ex)
         {

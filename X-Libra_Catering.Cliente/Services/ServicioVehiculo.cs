@@ -12,9 +12,10 @@ namespace X_Libra_Catering.Cliente.Services
             Http = http;
         }
 
-        public async Task<List<VehiculoDTO>> Lista()
+        public async Task<ResultadoPaginado<VehiculoDTO>> Lista(int pagina = 1, int tamano = 20, string? busqueda = null)
         {
-            var Resultado = await Http.GetFromJsonAsync<ResponseAPI<List<VehiculoDTO>>>("api/Vehiculos/Lista");
+            var url = $"api/Vehiculos/Lista?pagina={pagina}&tamano={tamano}&busqueda={Uri.EscapeDataString(busqueda ?? "")}";
+            var Resultado = await Http.GetFromJsonAsync<ResponseAPI<ResultadoPaginado<VehiculoDTO>>>(url);
             if (Resultado!.EsCorrecto)
                 return Resultado.Valor!;
             else

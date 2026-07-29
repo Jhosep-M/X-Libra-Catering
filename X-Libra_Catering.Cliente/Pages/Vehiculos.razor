@@ -153,7 +153,8 @@
         StateHasChanged();
         try
         {
-            lista = await ServVehiculo.Lista();
+            var resultado = await ServVehiculo.Lista(1, 9999);
+            lista = resultado.Items;
         }
         catch (Exception ex)
         {

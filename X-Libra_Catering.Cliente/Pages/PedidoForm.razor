@@ -130,9 +130,9 @@
         StateHasChanged();
         try
         {
-            try { eventos = await ServEvento.Lista(); } catch { }
-            try { vehiculos = await ServVehiculo.Lista(); } catch { }
-            try { menus = await ServMenu.Lista(); } catch { }
+            try { eventos = (await ServEvento.Lista(1, 9999)).Items; } catch { }
+            try { vehiculos = (await ServVehiculo.Lista(1, 9999)).Items; } catch { }
+            try { menus = (await ServMenu.Lista(1, 9999)).Items; } catch { }
 
             if (CodModificar > 0)
             {

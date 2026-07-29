@@ -54,28 +54,49 @@ namespace X_Libra_Catering.Server.Controllers
         }
 
         [HttpGet("Lista")]
-        public async Task<IActionResult> Lista()
+        public async Task<IActionResult> Lista([FromQuery] int pagina = 1, [FromQuery] int tamano = 20, [FromQuery] string? busqueda = null)
         {
-            var RespuestaApi = new ResponseAPI<List<EventoDTO>>();
+            var RespuestaApi = new ResponseAPI<ResultadoPaginado<EventoDTO>>();
             try
             {
-                var lista = await _context.Eventos.Where(e => e.Activo).Include(e => e.Cliente).ToListAsync();
-                var listaDTO = lista.Select(e => new EventoDTO
-                {
-                    Id = e.Id,
-                    ClienteId = e.ClienteId,
-                    NombreEvento = e.NombreEvento,
-                    TipoEvento = e.TipoEvento,
-                    Estado = e.Estado,
-                    FechaEvento = e.FechaEvento,
-                    Ubicacion = e.Ubicacion,
-                    NumInvitados = e.NumInvitados,
-                    ClienteNombre = e.Cliente?.Nombre,
-                    FechaCreacion = e.FechaCreacion,
-                    FechaModificacion = e.FechaModificacion
-                }).ToList();
+                var query = _context.Eventos.Where(e => e.Activo).Include(e => e.Cliente).AsQueryable();
+
+                if (!string.IsNullOrWhiteSpace(busqueda))
+                    query = query.Where(e =>
+                        e.NombreEvento.Contains(busqueda) ||
+                        e.Ubicacion.Contains(busqueda) ||
+                        (e.Cliente != null && e.Cliente.Nombre.Contains(busqueda)));
+
+                var total = await query.CountAsync();
+
+                var items = await query
+                    .OrderBy(e => e.FechaEvento)
+                    .Skip((pagina - 1) * tamano)
+                    .Take(tamano)
+                    .Select(e => new EventoDTO
+                    {
+                        Id = e.Id,
+                        ClienteId = e.ClienteId,
+                        NombreEvento = e.NombreEvento,
+                        TipoEvento = e.TipoEvento,
+                        Estado = e.Estado,
+                        FechaEvento = e.FechaEvento,
+                        Ubicacion = e.Ubicacion,
+                        NumInvitados = e.NumInvitados,
+                        ClienteNombre = e.Cliente!.Nombre,
+                        FechaCreacion = e.FechaCreacion,
+                        FechaModificacion = e.FechaModificacion
+                    })
+                    .ToListAsync();
+
                 RespuestaApi.EsCorrecto = true;
-                RespuestaApi.Valor = listaDTO;
+                RespuestaApi.Valor = new ResultadoPaginado<EventoDTO>
+                {
+                    Items = items,
+                    Total = total,
+                    Pagina = pagina,
+                    Tamano = tamano
+                };
                 RespuestaApi.Mensaje = "Lista preparada";
             }
             catch (Exception ex)
