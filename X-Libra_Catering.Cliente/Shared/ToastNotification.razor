@@ -1,0 +1,27 @@
+@inject ServicioNotificacion Notificacion
+
+<div class="toast-container">
+    @foreach (var t in toasts)
+    {
+        <div class="toast toast-@t.Tipo">@t.Mensaje</div>
+    }
+</div>
+
+@code {
+    private List<(string Mensaje, string Tipo)> toasts = new();
+
+    protected override void OnInitialized()
+    {
+        Notificacion.OnNotificar += (msg, tipo) =>
+        {
+            toasts.Add((msg, tipo));
+            StateHasChanged();
+            _ = Task.Run(async () =>
+            {
+                await Task.Delay(3000);
+                toasts.Remove((msg, tipo));
+                await InvokeAsync(StateHasChanged);
+            });
+        };
+    }
+}

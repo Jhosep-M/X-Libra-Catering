@@ -14,5 +14,6 @@ builder.Services.AddScoped<ServicioEvento>();
 builder.Services.AddScoped<ServicioMenu>();
 builder.Services.AddScoped<ServicioVehiculo>();
 builder.Services.AddScoped<ServicioPedido>();
+builder.Services.AddSingleton<ServicioNotificacion>();
 
 await builder.Build().RunAsync();

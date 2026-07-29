@@ -1,0 +1,12 @@
+@if (Visible)
+{
+    <div class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <p>@Mensaje</p>
+    </div>
+}
+
+@code {
+    [Parameter] public bool Visible { get; set; }
+    [Parameter] public string Mensaje { get; set; } = "Cargando...";
+}
