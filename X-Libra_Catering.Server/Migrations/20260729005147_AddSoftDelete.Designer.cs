@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using X_Libra_Catering.Server.Data;
 
@@ -11,9 +12,11 @@ using X_Libra_Catering.Server.Data;
 namespace X_Libra_Catering.Server.Migrations
 {
     [DbContext(typeof(BdXLibraCateringContext))]
-    partial class BdXLibraCateringContextModelSnapshot : ModelSnapshot
+    [Migration("20260729005147_AddSoftDelete")]
+    partial class AddSoftDelete
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -87,10 +90,7 @@ namespace X_Libra_Catering.Server.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<bool>("Activo")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true)
-                        .HasColumnName("ACTIVO");
+                        .HasColumnType("bit");
 
                     b.Property<int>("ClienteId")
                         .HasColumnType("int")

@@ -24,7 +24,7 @@ namespace X_Libra_Catering.Server.Controllers
             var RespuestaApi = new ResponseAPI<List<MenuDTO>>();
             try
             {
-                var lista = await _context.Menus.ToListAsync();
+                var lista = await _context.Menus.Where(m => m.Activo).ToListAsync();
                 var listaDTO = lista.Select(m => new MenuDTO
                 {
                     Id = m.Id,
@@ -214,7 +214,8 @@ namespace X_Libra_Catering.Server.Controllers
                 }
                 else
                 {
-                    _context.Menus.Remove(entidad);
+                    entidad.Activo = false;
+                    entidad.FechaModificacion = DateTime.UtcNow;
                     await _context.SaveChangesAsync();
                     RespuestaApi.EsCorrecto = true;
                     RespuestaApi.Valor = entidad.Id;

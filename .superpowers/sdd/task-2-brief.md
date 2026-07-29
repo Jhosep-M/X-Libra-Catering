@@ -1,145 +1,129 @@
-### Task 2: Clientes — Tarjetero / Directorio
+# Task 2: Integrar Loading + Toasts en todas las páginas
 
-**Files:**
-- Modify: `X-Libra_Catering.Cliente/Pages/Clientes.razor`
+**Goal:** Add loading spinner and toast notifications to all 10 Blazor pages.
 
-**Interfaces:**
-- Consumes: `.page-header`, `.toolbar`, `.card-grid`, `.contact-card`, `.contact-avatar`, `.contact-body`, `.contact-info`, `.card-footer-actions`, `.btn-icon`, `.btn-icon-edit`, `.btn-icon-delete`, `.empty-state` (CSS from Task 1, already in app.css)
-- Produces: Página `@page "/clientes"` funcional con búsqueda y grid de contactos
+**Note from the plan's spec:** Before starting the work, read each file you need to modify first.
 
-- [ ] **Step 1: Reescribir Clientes.razor**
+**Files to modify (10 pages):**
+- `X-Libra_Catering.Cliente/Pages/Clientes.razor`
+- `X-Libra_Catering.Cliente/Pages/ClienteForm.razor`
+- `X-Libra_Catering.Cliente/Pages/EventosDashboard.razor`
+- `X-Libra_Catering.Cliente/Pages/EventoForm.razor`
+- `X-Libra_Catering.Cliente/Pages/Menus.razor`
+- `X-Libra_Catering.Cliente/Pages/MenuForm.razor`
+- `X-Libra_Catering.Cliente/Pages/Vehiculos.razor`
+- `X-Libra_Catering.Cliente/Pages/VehiculoForm.razor`
+- `X-Libra_Catering.Cliente/Pages/Pedidos.razor`
+- `X-Libra_Catering.Cliente/Pages/PedidoForm.razor`
 
-Replace the entire file content with:
+**Consumes:** `LoadingSpinner` (component in `X-Libra_Catering.Cliente.Shared` namespace, already imported globally), `ServicioNotificacion` (singleton service, inject as `@inject ServicioNotificacion Notificacion`)
+
+**Actions to apply to EACH of the 10 pages:**
+
+### Action 1: Add LoadingSpinner at top of page content
+
+Add after the PageTitle/header, but before the main content:
 
 ```razor
-@page "/clientes"
-@inject ServicioCliente ServCliente
-@inject NavigationManager ServNav
+<LoadingSpinner Visible="cargando" Mensaje="Cargando datos..." />
+```
 
-<PageTitle>Clientes</PageTitle>
+### Action 2: Add `cargando` field
 
-<div class="page-header">
-    <div>
-        <h3>Clientes</h3>
-        <p class="text-muted">Directorio de contactos registrados</p>
-    </div>
-    <a href="cliente" class="btn btn-primary">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
-        </svg>
-        Agregar Cliente
-    </a>
-</div>
+In the `@code` block, add:
 
-<div class="toolbar">
-    <div class="search-box">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-        </svg>
-        <input type="text" class="search-input" placeholder="Buscar por nombre, telefono o email..."
-               @bind="filtroTexto" @bind:event="oninput" />
-    </div>
-    <span class="result-count">@clientesFiltrados.Count() clientes</span>
-</div>
+```csharp
+private bool cargando;
+```
 
-@if (!clientesFiltrados.Any())
-{
-    <div class="empty-state">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-            <circle cx="9" cy="7" r="4"/>
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-        </svg>
-        <h4>No hay clientes registrados</h4>
-        <p>Agrega tu primer cliente para empezar.</p>
-    </div>
-}
-else
-{
-    <div class="card-grid">
-        @foreach (var item in clientesFiltrados)
-        {
-            <div class="contact-card">
-                <div class="contact-avatar">@item.Nombre[0]</div>
-                <div class="contact-body">
-                    <h5>@item.Nombre</h5>
-                    <div class="contact-info">
-                        <span class="info-item">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
-                            </svg>
-                            @item.Telefono
-                        </span>
-                        <span class="info-item">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                                <polyline points="22,6 12,13 2,6"/>
-                            </svg>
-                            @item.Email
-                        </span>
-                        <span class="info-item">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                                <circle cx="12" cy="10" r="3"/>
-                            </svg>
-                            @item.Direccion
-                        </span>
-                    </div>
-                    <div class="card-footer-actions">
-                        <a href="cliente/@item.Id" class="btn-icon btn-icon-edit" title="Editar">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                            </svg>
-                        </a>
-                        <button class="btn-icon btn-icon-delete" title="Eliminar" @onclick="() => Eliminar(item.Id)">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="3 6 5 6 21 6"/>
-                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        }
-    </div>
-}
+### Action 3: Inject ServicioNotificacion
 
-@code {
-    private List<ClienteDTO> lista = new();
-    private string? filtroTexto;
+Add at the top of the page with the other `@inject` directives:
 
-    private IEnumerable<ClienteDTO> clientesFiltrados => lista
-        .Where(c => string.IsNullOrWhiteSpace(filtroTexto) ||
-                     c.Nombre.Contains(filtroTexto, StringComparison.OrdinalIgnoreCase) ||
-                     c.Telefono.Contains(filtroTexto, StringComparison.OrdinalIgnoreCase) ||
-                     c.Email.Contains(filtroTexto, StringComparison.OrdinalIgnoreCase));
+```razor
+@inject ServicioNotificacion Notificacion
+```
 
-    protected override async Task OnInitializedAsync()
-    {
-        await CargarLista();
-    }
+### Action 4: Wrap async data loads with loading state
 
-    private async Task CargarLista()
-    {
-        try { lista = await ServCliente.Lista(); }
-        catch (Exception ex) { Console.WriteLine($"Error: {ex.Message}"); }
-    }
-
-    private async Task Eliminar(int Cod)
-    {
-        try
-        {
-            await ServCliente.Eliminar(Cod);
-            await CargarLista();
-        }
-        catch (Exception ex) { Console.WriteLine($"Error: {ex.Message}"); }
-    }
+```csharp
+cargando = true;
+StateHasChanged();
+try {
+    // existing data loading call
+} finally {
+    cargando = false;
+    StateHasChanged();
 }
 ```
 
-- [ ] **Step 2: Build to verify**
+### Action 5: Replace Console.WriteLine with toast notifications
 
-Run: `dotnet build "X-Libra_Catering.Cliente/X-Libra_Catering.Cliente.csproj"`
-Expected: Build succeeded, 0 errors
+Replace ALL `Console.WriteLine($"Error: ...")` in catch blocks with:
+
+```csharp
+catch (Exception ex) {
+    Notificacion.Mostrar($"Error: {ex.Message}", ServicioNotificacion.Tipo.Error);
+}
+```
+
+### Action 6: Add success toast on forms after Guardar/Eliminar
+
+After successful save/delete operations in Form pages, add:
+
+```csharp
+Notificacion.Mostrar("Guardado correctamente", ServicioNotificacion.Tipo.Exito);
+```
+
+---
+
+## Detailed per-page notes
+
+### Clientes.razor
+- Has `CargarLista()` and `Eliminar()` methods with Console.WriteLine catches
+- Add loading to CargarLista and Eliminar
+- Add success toast after Eliminar
+
+### ClienteForm.razor
+- Has `Guardar()` method with Console.WriteLine catch
+- Add loading to OnInitializedAsync and Guardar
+- Add success toast after Guardar
+
+### EventosDashboard.razor
+- Has `CargarLista()` method with Console.WriteLine catch
+- Add loading to CargarLista and CambiarEstado
+
+### EventoForm.razor
+- Has `Guardar()` method
+- Add loading to OnInitializedAsync and Guardar
+- Add success toast after Guardar
+
+### Menus.razor
+- Has `CargarLista()` and `Eliminar()` methods
+- Add loading to CargarLista and Eliminar
+- Add success toast after Eliminar
+
+### MenuForm.razor
+- Has `Guardar()` method
+- Add loading to OnInitializedAsync and Guardar
+- Add success toast after Guardar
+
+### Vehiculos.razor
+- Has `CargarLista()` and `Eliminar()` methods
+- Add loading to CargarLista and Eliminar
+- Add success toast after Eliminar
+
+### VehiculoForm.razor
+- Has `Guardar()`, `BuscarDireccion()`, `AbrirMapa()` methods
+- Add loading to OnInitializedAsync and Guardar
+- Add success toast after Guardar
+
+### Pedidos.razor
+- Has `CargarLista()` and `Eliminar()` methods
+- Add loading to CargarLista and Eliminar
+- Add success toast after Eliminar
+
+### PedidoForm.razor
+- Has `Guardar()` method
+- Add loading to OnInitializedAsync and Guardar
+- Add success toast after Guardar

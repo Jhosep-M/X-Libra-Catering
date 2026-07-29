@@ -27,6 +27,7 @@ namespace X_Libra_Catering.Server.Data
                 entity.Property(e => e.Direccion).HasColumnName("DIRECCION").HasMaxLength(200).IsUnicode(false);
                 entity.Property(e => e.FechaCreacion).HasColumnName("FECHA_CREACION");
                 entity.Property(e => e.FechaModificacion).HasColumnName("FECHA_MODIFICACION");
+                entity.Property(e => e.Activo).HasColumnName("ACTIVO").HasDefaultValue(true);
             });
 
             modelBuilder.Entity<Evento>(entity =>
@@ -43,6 +44,7 @@ namespace X_Libra_Catering.Server.Data
                 entity.Property(e => e.NumInvitados).HasColumnName("NUM_INVITADOS");
                 entity.Property(e => e.FechaCreacion).HasColumnName("FECHA_CREACION");
                 entity.Property(e => e.FechaModificacion).HasColumnName("FECHA_MODIFICACION");
+                entity.Property(e => e.Activo).HasColumnName("ACTIVO").HasDefaultValue(true);
                 entity.HasOne(e => e.Cliente).WithMany(c => c.Eventos).HasForeignKey(e => e.ClienteId).HasConstraintName("FK_EVENTOS_CLIENTES");
             });
 
@@ -59,6 +61,7 @@ namespace X_Libra_Catering.Server.Data
                 entity.Property(e => e.ImagenRuta).HasColumnName("IMAGEN_RUTA").HasMaxLength(500).IsUnicode(false);
                 entity.Property(e => e.FechaCreacion).HasColumnName("FECHA_CREACION");
                 entity.Property(e => e.FechaModificacion).HasColumnName("FECHA_MODIFICACION");
+                entity.Property(e => e.Activo).HasColumnName("ACTIVO").HasDefaultValue(true);
             });
 
             modelBuilder.Entity<Vehiculo>(entity =>
@@ -78,6 +81,7 @@ namespace X_Libra_Catering.Server.Data
                 entity.Property(e => e.Longitud).HasColumnName("LONGITUD");
                 entity.Property(e => e.FechaCreacion).HasColumnName("FECHA_CREACION");
                 entity.Property(e => e.FechaModificacion).HasColumnName("FECHA_MODIFICACION");
+                entity.Property(e => e.Activo).HasColumnName("ACTIVO").HasDefaultValue(true);
             });
 
             modelBuilder.Entity<PedidoCabecera>(entity =>

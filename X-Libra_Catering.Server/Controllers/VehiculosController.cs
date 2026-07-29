@@ -23,7 +23,7 @@ namespace X_Libra_Catering.Server.Controllers
             var RespuestaApi = new ResponseAPI<List<VehiculoDTO>>();
             try
             {
-                var lista = await _context.Vehiculos.ToListAsync();
+                var lista = await _context.Vehiculos.Where(v => v.Activo).ToListAsync();
                     var listaDTO = lista.Select(v => new VehiculoDTO
                     {
                         Id = v.Id,
@@ -175,7 +175,8 @@ namespace X_Libra_Catering.Server.Controllers
                 }
                 else
                 {
-                    _context.Vehiculos.Remove(entidad);
+                    entidad.Activo = false;
+                    entidad.FechaModificacion = DateTime.UtcNow;
                     await _context.SaveChangesAsync();
                     RespuestaApi.EsCorrecto = true;
                     RespuestaApi.Valor = entidad.Id;

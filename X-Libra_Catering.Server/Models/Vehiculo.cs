@@ -12,6 +12,7 @@ namespace X_Libra_Catering.Server.Models
         public string? Direccion { get; set; }
         public double? Latitud { get; set; }
         public double? Longitud { get; set; }
+        public bool Activo { get; set; } = true;
         public DateTime? FechaCreacion { get; set; }
         public DateTime? FechaModificacion { get; set; }
         public virtual ICollection<PedidoCabecera> Pedidos { get; set; } = new List<PedidoCabecera>();

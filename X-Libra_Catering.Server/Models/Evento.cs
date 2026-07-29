@@ -12,6 +12,7 @@ namespace X_Libra_Catering.Server.Models
         public DateTime FechaEvento { get; set; }
         public string Ubicacion { get; set; } = string.Empty;
         public int NumInvitados { get; set; }
+        public bool Activo { get; set; } = true;
         public DateTime? FechaCreacion { get; set; }
         public DateTime? FechaModificacion { get; set; }
         public virtual Cliente? Cliente { get; set; }
