@@ -3,8 +3,11 @@
 @inject ServicioVehiculo ServVehiculo
 @inject NavigationManager ServNav
 @inject IJSRuntime JS
+@inject ServicioNotificacion Notificacion
 
 <PageTitle>@Titulo</PageTitle>
+
+<LoadingSpinner Visible="cargando" Mensaje="Cargando datos..." />
 
 <h3>@Titulo</h3>
 
@@ -84,6 +87,7 @@
     [Parameter]
     public int CodModificar { get; set; }
 
+    private bool cargando;
     private VehiculoDTO dto = new();
     private string Titulo = "Nuevo Vehiculo";
     private string TextoBoton = "Guardar";
@@ -92,18 +96,25 @@
 
     protected override async Task OnInitializedAsync()
     {
-        if (CodModificar > 0)
+        cargando = true;
+        StateHasChanged();
+        try
         {
-            Titulo = "Modificar Vehiculo";
-            TextoBoton = "Modificar";
-            try
+            if (CodModificar > 0)
             {
+                Titulo = "Modificar Vehiculo";
+                TextoBoton = "Modificar";
                 dto = await ServVehiculo.Buscar(CodModificar);
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error: {ex.Message}");
-            }
+        }
+        catch (Exception ex)
+        {
+            Notificacion.Mostrar($"Error: {ex.Message}", ServicioNotificacion.Tipo.Error);
+        }
+        finally
+        {
+            cargando = false;
+            StateHasChanged();
         }
     }
 
@@ -185,17 +196,25 @@
 
     private async Task Guardar()
     {
+        cargando = true;
+        StateHasChanged();
         try
         {
             if (CodModificar > 0)
                 await ServVehiculo.Modificar(CodModificar, dto);
             else
                 await ServVehiculo.Guardar(dto);
+            Notificacion.Mostrar("Guardado correctamente", ServicioNotificacion.Tipo.Exito);
             ServNav.NavigateTo("vehiculos");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error: {ex.Message}");
+            Notificacion.Mostrar($"Error: {ex.Message}", ServicioNotificacion.Tipo.Error);
+        }
+        finally
+        {
+            cargando = false;
+            StateHasChanged();
         }
     }
 

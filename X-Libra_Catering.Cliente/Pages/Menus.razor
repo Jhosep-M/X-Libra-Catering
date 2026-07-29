@@ -2,8 +2,11 @@
 @using X_Libra_Catering.Shared.Enums
 @inject ServicioMenu ServMenu
 @inject NavigationManager ServNav
+@inject ServicioNotificacion Notificacion
 
 <PageTitle>Menus</PageTitle>
+
+<LoadingSpinner Visible="cargando" Mensaje="Cargando datos..." />
 
 <div class="page-header">
     <div>
@@ -90,6 +93,7 @@ else
 }
 
 @code {
+    private bool cargando;
     private List<MenuDTO> lista = new();
     private string? filtroTexto;
     private string? filtroCategoria;
@@ -106,18 +110,42 @@ else
 
     private async Task CargarLista()
     {
-        try { lista = await ServMenu.Lista(); }
-        catch (Exception ex) { Console.WriteLine($"Error: {ex.Message}"); }
+        cargando = true;
+        StateHasChanged();
+        try
+        {
+            lista = await ServMenu.Lista();
+        }
+        catch (Exception ex)
+        {
+            Notificacion.Mostrar($"Error: {ex.Message}", ServicioNotificacion.Tipo.Error);
+        }
+        finally
+        {
+            cargando = false;
+            StateHasChanged();
+        }
     }
 
     private async Task Eliminar(int Cod)
     {
+        cargando = true;
+        StateHasChanged();
         try
         {
             await ServMenu.Eliminar(Cod);
+            Notificacion.Mostrar("Eliminado correctamente", ServicioNotificacion.Tipo.Exito);
             await CargarLista();
         }
-        catch (Exception ex) { Console.WriteLine($"Error: {ex.Message}"); }
+        catch (Exception ex)
+        {
+            Notificacion.Mostrar($"Error: {ex.Message}", ServicioNotificacion.Tipo.Error);
+        }
+        finally
+        {
+            cargando = false;
+            StateHasChanged();
+        }
     }
 
     private string ObtenerIconoCategoria(CategoriaMenu categoria) => categoria switch

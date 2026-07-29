@@ -3,8 +3,11 @@
 @inject ServicioPedido ServPedido
 @inject NavigationManager ServNav
 @inject IJSRuntime JS
+@inject ServicioNotificacion Notificacion
 
 <PageTitle>Pedidos</PageTitle>
+
+<LoadingSpinner Visible="cargando" Mensaje="Cargando datos..." />
 
 <div class="page-header">
     <div>
@@ -112,6 +115,7 @@ else
 }
 
 @code {
+    private bool cargando;
     private List<PedidoCabeceraDTO> lista = new();
     private string? filtroTexto;
     private PedidoCabeceraDTO? itemArrastrado;
@@ -154,8 +158,21 @@ else
 
     private async Task CargarDatos()
     {
-        try { lista = await ServPedido.Lista(); }
-        catch (Exception ex) { Console.WriteLine($"Error: {ex.Message}"); }
+        cargando = true;
+        StateHasChanged();
+        try
+        {
+            lista = await ServPedido.Lista();
+        }
+        catch (Exception ex)
+        {
+            Notificacion.Mostrar($"Error: {ex.Message}", ServicioNotificacion.Tipo.Error);
+        }
+        finally
+        {
+            cargando = false;
+            StateHasChanged();
+        }
     }
 
     private void ArrastrarInicio(DragEventArgs e, PedidoCabeceraDTO p)
@@ -173,18 +190,32 @@ else
                 itemArrastrado.Estado = nuevoEstado;
                 await CargarDatos();
             }
-            catch (Exception ex) { Console.WriteLine($"Error: {ex.Message}"); }
+            catch (Exception ex)
+            {
+                Notificacion.Mostrar($"Error: {ex.Message}", ServicioNotificacion.Tipo.Error);
+            }
         }
         itemArrastrado = null;
     }
 
     private async Task Eliminar(int Cod)
     {
+        cargando = true;
+        StateHasChanged();
         try
         {
             await ServPedido.Eliminar(Cod);
+            Notificacion.Mostrar("Eliminado correctamente", ServicioNotificacion.Tipo.Exito);
             await CargarDatos();
         }
-        catch (Exception ex) { Console.WriteLine($"Error: {ex.Message}"); }
+        catch (Exception ex)
+        {
+            Notificacion.Mostrar($"Error: {ex.Message}", ServicioNotificacion.Tipo.Error);
+        }
+        finally
+        {
+            cargando = false;
+            StateHasChanged();
+        }
     }
 }

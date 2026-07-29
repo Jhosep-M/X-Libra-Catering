@@ -5,8 +5,11 @@
 @inject ServicioVehiculo ServVehiculo
 @inject ServicioMenu ServMenu
 @inject NavigationManager ServNav
+@inject ServicioNotificacion Notificacion
 
 <PageTitle>@Titulo</PageTitle>
+
+<LoadingSpinner Visible="cargando" Mensaje="Cargando datos..." />
 
 <h3>@Titulo</h3>
 
@@ -110,6 +113,7 @@
     [Parameter]
     public int CodModificar { get; set; }
 
+    private bool cargando;
     private PedidoCabeceraDTO dto = new() { FechaPedido = DateTime.Today };
     private List<EventoDTO> eventos = new();
     private List<VehiculoDTO> vehiculos = new();
@@ -122,22 +126,29 @@
 
     protected override async Task OnInitializedAsync()
     {
-        try { eventos = await ServEvento.Lista(); } catch { }
-        try { vehiculos = await ServVehiculo.Lista(); } catch { }
-        try { menus = await ServMenu.Lista(); } catch { }
-
-        if (CodModificar > 0)
+        cargando = true;
+        StateHasChanged();
+        try
         {
-            Titulo = "Modificar Pedido";
-            TextoBoton = "Modificar";
-            try
+            try { eventos = await ServEvento.Lista(); } catch { }
+            try { vehiculos = await ServVehiculo.Lista(); } catch { }
+            try { menus = await ServMenu.Lista(); } catch { }
+
+            if (CodModificar > 0)
             {
+                Titulo = "Modificar Pedido";
+                TextoBoton = "Modificar";
                 dto = await ServPedido.Buscar(CodModificar);
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error: {ex.Message}");
-            }
+        }
+        catch (Exception ex)
+        {
+            Notificacion.Mostrar($"Error: {ex.Message}", ServicioNotificacion.Tipo.Error);
+        }
+        finally
+        {
+            cargando = false;
+            StateHasChanged();
         }
     }
 
@@ -174,17 +185,25 @@
 
     private async Task Guardar()
     {
+        cargando = true;
+        StateHasChanged();
         try
         {
             if (CodModificar > 0)
                 await ServPedido.Modificar(CodModificar, dto);
             else
                 await ServPedido.Guardar(dto);
+            Notificacion.Mostrar("Guardado correctamente", ServicioNotificacion.Tipo.Exito);
             ServNav.NavigateTo("pedidos");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error: {ex.Message}");
+            Notificacion.Mostrar($"Error: {ex.Message}", ServicioNotificacion.Tipo.Error);
+        }
+        finally
+        {
+            cargando = false;
+            StateHasChanged();
         }
     }
 }

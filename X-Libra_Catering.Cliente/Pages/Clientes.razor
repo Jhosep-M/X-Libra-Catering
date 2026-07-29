@@ -1,8 +1,11 @@
 @page "/clientes"
 @inject ServicioCliente ServCliente
 @inject NavigationManager ServNav
+@inject ServicioNotificacion Notificacion
 
 <PageTitle>Clientes</PageTitle>
+
+<LoadingSpinner Visible="cargando" Mensaje="Cargando datos..." />
 
 <div class="page-header">
     <div>
@@ -93,6 +96,7 @@ else
 }
 
 @code {
+    private bool cargando;
     private List<ClienteDTO> lista = new();
     private string? filtroTexto;
 
@@ -109,17 +113,41 @@ else
 
     private async Task CargarLista()
     {
-        try { lista = await ServCliente.Lista(); }
-        catch (Exception ex) { Console.WriteLine($"Error: {ex.Message}"); }
+        cargando = true;
+        StateHasChanged();
+        try
+        {
+            lista = await ServCliente.Lista();
+        }
+        catch (Exception ex)
+        {
+            Notificacion.Mostrar($"Error: {ex.Message}", ServicioNotificacion.Tipo.Error);
+        }
+        finally
+        {
+            cargando = false;
+            StateHasChanged();
+        }
     }
 
     private async Task Eliminar(int Cod)
     {
+        cargando = true;
+        StateHasChanged();
         try
         {
             await ServCliente.Eliminar(Cod);
+            Notificacion.Mostrar("Eliminado correctamente", ServicioNotificacion.Tipo.Exito);
             await CargarLista();
         }
-        catch (Exception ex) { Console.WriteLine($"Error: {ex.Message}"); }
+        catch (Exception ex)
+        {
+            Notificacion.Mostrar($"Error: {ex.Message}", ServicioNotificacion.Tipo.Error);
+        }
+        finally
+        {
+            cargando = false;
+            StateHasChanged();
+        }
     }
 }

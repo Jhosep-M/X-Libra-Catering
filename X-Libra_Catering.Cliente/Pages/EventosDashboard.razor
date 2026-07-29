@@ -3,8 +3,11 @@
 @inject ServicioEvento ServEvento
 @inject NavigationManager ServNav
 @inject IJSRuntime JS
+@inject ServicioNotificacion Notificacion
 
 <PageTitle>Eventos - Dashboard</PageTitle>
+
+<LoadingSpinner Visible="cargando" Mensaje="Cargando datos..." />
 
 <div class="dashboard">
     <div class="dashboard-header">
@@ -188,6 +191,7 @@
 </div>
 
 @code {
+    private bool cargando;
     private DashboardKpiDTO kpi = new();
     private List<EventoDTO> todosEventos = new();
     private string? filtroTexto;
@@ -219,6 +223,8 @@
 
     private async Task CargarDatos()
     {
+        cargando = true;
+        StateHasChanged();
         try
         {
             kpi = await ServEvento.ObtenerKpi();
@@ -226,7 +232,12 @@
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error: {ex.Message}");
+            Notificacion.Mostrar($"Error: {ex.Message}", ServicioNotificacion.Tipo.Error);
+        }
+        finally
+        {
+            cargando = false;
+            StateHasChanged();
         }
     }
 
@@ -247,7 +258,7 @@
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error: {ex.Message}");
+                Notificacion.Mostrar($"Error: {ex.Message}", ServicioNotificacion.Tipo.Error);
             }
         }
         itemArrastrado = null;
@@ -265,7 +276,7 @@
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error: {ex.Message}");
+                Notificacion.Mostrar($"Error: {ex.Message}", ServicioNotificacion.Tipo.Error);
             }
         }
     }
@@ -284,7 +295,7 @@
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error: {ex.Message}");
+            Notificacion.Mostrar($"Error: {ex.Message}", ServicioNotificacion.Tipo.Error);
         }
     }
 

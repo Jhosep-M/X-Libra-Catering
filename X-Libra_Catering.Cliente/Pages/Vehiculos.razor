@@ -2,8 +2,11 @@
 @inject ServicioVehiculo ServVehiculo
 @inject NavigationManager ServNav
 @inject IJSRuntime JS
+@inject ServicioNotificacion Notificacion
 
 <PageTitle>Vehiculos</PageTitle>
+
+<LoadingSpinner Visible="cargando" Mensaje="Cargando datos..." />
 
 <div class="page-header">
     <div>
@@ -113,6 +116,7 @@
 }
 
 @code {
+    private bool cargando;
     private List<VehiculoDTO> lista = new();
     private string? filtroTexto;
     private string? filtroDisponible;
@@ -145,8 +149,21 @@
 
     private async Task CargarLista()
     {
-        try { lista = await ServVehiculo.Lista(); }
-        catch (Exception ex) { Console.WriteLine($"Error: {ex.Message}"); }
+        cargando = true;
+        StateHasChanged();
+        try
+        {
+            lista = await ServVehiculo.Lista();
+        }
+        catch (Exception ex)
+        {
+            Notificacion.Mostrar($"Error: {ex.Message}", ServicioNotificacion.Tipo.Error);
+        }
+        finally
+        {
+            cargando = false;
+            StateHasChanged();
+        }
     }
 
     private async Task ToggleVista()
@@ -175,12 +192,23 @@
 
     private async Task Eliminar(int Cod)
     {
+        cargando = true;
+        StateHasChanged();
         try
         {
             await ServVehiculo.Eliminar(Cod);
+            Notificacion.Mostrar("Eliminado correctamente", ServicioNotificacion.Tipo.Exito);
             await CargarLista();
         }
-        catch (Exception ex) { Console.WriteLine($"Error: {ex.Message}"); }
+        catch (Exception ex)
+        {
+            Notificacion.Mostrar($"Error: {ex.Message}", ServicioNotificacion.Tipo.Error);
+        }
+        finally
+        {
+            cargando = false;
+            StateHasChanged();
+        }
     }
 
 }

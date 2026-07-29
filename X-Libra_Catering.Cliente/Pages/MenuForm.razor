@@ -2,8 +2,11 @@
 @page "/menu/{CodModificar:int}"
 @inject ServicioMenu ServMenu
 @inject NavigationManager ServNav
+@inject ServicioNotificacion Notificacion
 
 <PageTitle>@Titulo</PageTitle>
+
+<LoadingSpinner Visible="cargando" Mensaje="Cargando datos..." />
 
 <h3>@Titulo</h3>
 
@@ -59,6 +62,7 @@
     [Parameter]
     public int CodModificar { get; set; }
 
+    private bool cargando;
     private MenuDTO dto = new();
     private string Titulo = "Nuevo Menu";
     private string TextoBoton = "Guardar";
@@ -66,18 +70,26 @@
 
     protected override async Task OnInitializedAsync()
     {
-        if (CodModificar > 0)
+        cargando = true;
+        StateHasChanged();
+        try
         {
-            Titulo = "Modificar Menu";
-            TextoBoton = "Modificar";
-            try
+            if (CodModificar > 0)
             {
+                Titulo = "Modificar Menu";
+                TextoBoton = "Modificar";
                 dto = await ServMenu.Buscar(CodModificar);
             }
-            catch (Exception ex)
-            {
-                errorMensaje = $"Error al cargar menu: {ex.Message}";
-            }
+        }
+        catch (Exception ex)
+        {
+            errorMensaje = $"Error al cargar menu: {ex.Message}";
+            Notificacion.Mostrar($"Error: {ex.Message}", ServicioNotificacion.Tipo.Error);
+        }
+        finally
+        {
+            cargando = false;
+            StateHasChanged();
         }
     }
 
@@ -102,6 +114,8 @@
 
     private async Task Guardar()
     {
+        cargando = true;
+        StateHasChanged();
         errorMensaje = null;
         try
         {
@@ -109,11 +123,18 @@
                 await ServMenu.Modificar(CodModificar, dto);
             else
                 await ServMenu.Guardar(dto);
+            Notificacion.Mostrar("Guardado correctamente", ServicioNotificacion.Tipo.Exito);
             ServNav.NavigateTo("menus");
         }
         catch (Exception ex)
         {
             errorMensaje = $"Error: {ex.Message}";
+            Notificacion.Mostrar($"Error: {ex.Message}", ServicioNotificacion.Tipo.Error);
+        }
+        finally
+        {
+            cargando = false;
+            StateHasChanged();
         }
     }
 }

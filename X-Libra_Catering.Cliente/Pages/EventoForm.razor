@@ -3,8 +3,11 @@
 @inject ServicioEvento ServEvento
 @inject ServicioCliente ServCliente
 @inject NavigationManager ServNav
+@inject ServicioNotificacion Notificacion
 
 <PageTitle>@Titulo</PageTitle>
+
+<LoadingSpinner Visible="cargando" Mensaje="Cargando datos..." />
 
 <h3>@Titulo</h3>
 
@@ -69,6 +72,7 @@
     [Parameter]
     public int CodModificar { get; set; }
 
+    private bool cargando;
     private EventoDTO dto = new() { FechaEvento = DateTime.Today };
     private List<ClienteDTO> clientes = new();
     private string Titulo = "Nuevo Evento";
@@ -77,32 +81,46 @@
 
     protected override async Task OnInitializedAsync()
     {
+        cargando = true;
+        StateHasChanged();
         try
         {
-            clientes = await ServCliente.Lista();
-        }
-        catch (Exception ex)
-        {
-            errorMensaje = $"Error al cargar clientes: {ex.Message}";
-        }
-
-        if (CodModificar > 0)
-        {
-            Titulo = "Modificar Evento";
-            TextoBoton = "Modificar";
             try
             {
-                dto = await ServEvento.Buscar(CodModificar);
+                clientes = await ServCliente.Lista();
             }
             catch (Exception ex)
             {
-                errorMensaje = $"Error al cargar evento: {ex.Message}";
+                errorMensaje = $"Error al cargar clientes: {ex.Message}";
+                Notificacion.Mostrar($"Error al cargar clientes: {ex.Message}", ServicioNotificacion.Tipo.Error);
             }
+
+            if (CodModificar > 0)
+            {
+                Titulo = "Modificar Evento";
+                TextoBoton = "Modificar";
+                try
+                {
+                    dto = await ServEvento.Buscar(CodModificar);
+                }
+                catch (Exception ex)
+                {
+                    errorMensaje = $"Error al cargar evento: {ex.Message}";
+                    Notificacion.Mostrar($"Error al cargar evento: {ex.Message}", ServicioNotificacion.Tipo.Error);
+                }
+            }
+        }
+        finally
+        {
+            cargando = false;
+            StateHasChanged();
         }
     }
 
     private async Task Guardar()
     {
+        cargando = true;
+        StateHasChanged();
         errorMensaje = null;
         try
         {
@@ -110,11 +128,18 @@
                 await ServEvento.Modificar(CodModificar, dto);
             else
                 await ServEvento.Guardar(dto);
+            Notificacion.Mostrar("Guardado correctamente", ServicioNotificacion.Tipo.Exito);
             ServNav.NavigateTo("eventos");
         }
         catch (Exception ex)
         {
             errorMensaje = $"Error: {ex.Message}";
+            Notificacion.Mostrar($"Error: {ex.Message}", ServicioNotificacion.Tipo.Error);
+        }
+        finally
+        {
+            cargando = false;
+            StateHasChanged();
         }
     }
 }
