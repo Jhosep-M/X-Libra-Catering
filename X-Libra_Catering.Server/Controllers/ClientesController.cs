@@ -33,7 +33,9 @@ namespace X_Libra_Catering.Server.Controllers
                     Nombre = c.Nombre,
                     Telefono = c.Telefono,
                     Email = c.Email,
-                    Direccion = c.Direccion
+                    Direccion = c.Direccion,
+                    FechaCreacion = c.FechaCreacion,
+                    FechaModificacion = c.FechaModificacion
                 }).ToList();
                 RespuestaApi.EsCorrecto = true;
                 RespuestaApi.Valor = listaDTO;
@@ -68,7 +70,9 @@ namespace X_Libra_Catering.Server.Controllers
                         Nombre = entidad.Nombre,
                         Telefono = entidad.Telefono,
                         Email = entidad.Email,
-                        Direccion = entidad.Direccion
+                        Direccion = entidad.Direccion,
+                        FechaCreacion = entidad.FechaCreacion,
+                        FechaModificacion = entidad.FechaModificacion
                     };
                     RespuestaApi.Mensaje = "Cliente encontrado";
                 }

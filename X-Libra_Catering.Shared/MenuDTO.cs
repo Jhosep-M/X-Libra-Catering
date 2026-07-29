@@ -11,5 +11,7 @@ namespace X_Libra_Catering.Shared
         public decimal Precio { get; set; }
         public bool RequiereRefrigeracion { get; set; }
         public string? ImagenRuta { get; set; }
+        public DateTime? FechaCreacion { get; set; }
+        public DateTime? FechaModificacion { get; set; }
     }
 }

@@ -13,5 +13,7 @@ namespace X_Libra_Catering.Shared
         public string Ubicacion { get; set; } = string.Empty;
         public int NumInvitados { get; set; }
         public string? ClienteNombre { get; set; }
+        public DateTime? FechaCreacion { get; set; }
+        public DateTime? FechaModificacion { get; set; }
     }
 }

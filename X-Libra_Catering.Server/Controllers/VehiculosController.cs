@@ -35,7 +35,9 @@ namespace X_Libra_Catering.Server.Controllers
                         Disponible = v.Disponible,
                         Direccion = v.Direccion,
                         Latitud = v.Latitud,
-                        Longitud = v.Longitud
+                        Longitud = v.Longitud,
+                        FechaCreacion = v.FechaCreacion,
+                        FechaModificacion = v.FechaModificacion
                     }).ToList();
                 RespuestaApi.EsCorrecto = true;
                 RespuestaApi.Valor = listaDTO;
@@ -75,7 +77,9 @@ namespace X_Libra_Catering.Server.Controllers
                         Disponible = entidad.Disponible,
                         Direccion = entidad.Direccion,
                         Latitud = entidad.Latitud,
-                        Longitud = entidad.Longitud
+                        Longitud = entidad.Longitud,
+                        FechaCreacion = entidad.FechaCreacion,
+                        FechaModificacion = entidad.FechaModificacion
                     };
                     RespuestaApi.Mensaje = "Vehiculo encontrado";
                 }

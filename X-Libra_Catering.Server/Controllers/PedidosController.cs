@@ -41,6 +41,8 @@ namespace X_Libra_Catering.Server.Controllers
                     Total = p.Total,
                     EventoNombre = p.Evento?.NombreEvento,
                     VehiculoPlaca = p.Vehiculo?.Placa,
+                    FechaCreacion = p.FechaCreacion,
+                    FechaModificacion = p.FechaModificacion,
                     Detalles = p.Detalles.Select(d => new PedidoDetalleDTO
                     {
                         Id = d.Id,
@@ -49,7 +51,9 @@ namespace X_Libra_Catering.Server.Controllers
                         Cantidad = d.Cantidad,
                         PrecioUnitario = d.PrecioUnitario,
                         Subtotal = d.Subtotal,
-                        MenuNombre = d.Menu?.Nombre
+                        MenuNombre = d.Menu?.Nombre,
+                        FechaCreacion = d.FechaCreacion,
+                        FechaModificacion = d.FechaModificacion
                     }).ToList()
                 }).ToList();
                 RespuestaApi.EsCorrecto = true;
@@ -94,6 +98,8 @@ namespace X_Libra_Catering.Server.Controllers
                         Total = entidad.Total,
                         EventoNombre = entidad.Evento?.NombreEvento,
                         VehiculoPlaca = entidad.Vehiculo?.Placa,
+                        FechaCreacion = entidad.FechaCreacion,
+                        FechaModificacion = entidad.FechaModificacion,
                         Detalles = entidad.Detalles.Select(d => new PedidoDetalleDTO
                         {
                             Id = d.Id,
@@ -102,7 +108,9 @@ namespace X_Libra_Catering.Server.Controllers
                             Cantidad = d.Cantidad,
                             PrecioUnitario = d.PrecioUnitario,
                             Subtotal = d.Subtotal,
-                            MenuNombre = d.Menu?.Nombre
+                            MenuNombre = d.Menu?.Nombre,
+                            FechaCreacion = d.FechaCreacion,
+                            FechaModificacion = d.FechaModificacion
                         }).ToList()
                     };
                     RespuestaApi.Mensaje = "Pedido encontrado";

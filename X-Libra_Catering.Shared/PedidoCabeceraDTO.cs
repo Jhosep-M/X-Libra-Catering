@@ -13,5 +13,7 @@ namespace X_Libra_Catering.Shared
         public string? EventoNombre { get; set; }
         public string? VehiculoPlaca { get; set; }
         public List<PedidoDetalleDTO> Detalles { get; set; } = new();
+        public DateTime? FechaCreacion { get; set; }
+        public DateTime? FechaModificacion { get; set; }
     }
 }

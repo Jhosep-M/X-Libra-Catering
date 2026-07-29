@@ -33,7 +33,9 @@ namespace X_Libra_Catering.Server.Controllers
                     Categoria = m.Categoria,
                     Precio = m.Precio,
                     RequiereRefrigeracion = m.RequiereRefrigeracion,
-                    ImagenRuta = m.ImagenRuta
+                    ImagenRuta = m.ImagenRuta,
+                    FechaCreacion = m.FechaCreacion,
+                    FechaModificacion = m.FechaModificacion
                 }).ToList();
                 RespuestaApi.EsCorrecto = true;
                 RespuestaApi.Valor = listaDTO;
@@ -70,7 +72,9 @@ namespace X_Libra_Catering.Server.Controllers
                         Categoria = entidad.Categoria,
                         Precio = entidad.Precio,
                         RequiereRefrigeracion = entidad.RequiereRefrigeracion,
-                        ImagenRuta = entidad.ImagenRuta
+                        ImagenRuta = entidad.ImagenRuta,
+                        FechaCreacion = entidad.FechaCreacion,
+                        FechaModificacion = entidad.FechaModificacion
                     };
                     RespuestaApi.Mensaje = "Menu encontrado";
                 }

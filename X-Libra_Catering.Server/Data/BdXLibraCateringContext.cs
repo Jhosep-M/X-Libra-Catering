@@ -25,6 +25,8 @@ namespace X_Libra_Catering.Server.Data
                 entity.Property(e => e.Telefono).HasColumnName("TELEFONO").HasMaxLength(15).IsUnicode(false);
                 entity.Property(e => e.Email).HasColumnName("EMAIL").HasMaxLength(100).IsUnicode(false);
                 entity.Property(e => e.Direccion).HasColumnName("DIRECCION").HasMaxLength(200).IsUnicode(false);
+                entity.Property(e => e.FechaCreacion).HasColumnName("FECHA_CREACION");
+                entity.Property(e => e.FechaModificacion).HasColumnName("FECHA_MODIFICACION");
             });
 
             modelBuilder.Entity<Evento>(entity =>
@@ -39,6 +41,8 @@ namespace X_Libra_Catering.Server.Data
                 entity.Property(e => e.FechaEvento).HasColumnName("FECHA_EVENTO");
                 entity.Property(e => e.Ubicacion).HasColumnName("UBICACION").HasMaxLength(200).IsUnicode(false);
                 entity.Property(e => e.NumInvitados).HasColumnName("NUM_INVITADOS");
+                entity.Property(e => e.FechaCreacion).HasColumnName("FECHA_CREACION");
+                entity.Property(e => e.FechaModificacion).HasColumnName("FECHA_MODIFICACION");
                 entity.HasOne(e => e.Cliente).WithMany(c => c.Eventos).HasForeignKey(e => e.ClienteId).HasConstraintName("FK_EVENTOS_CLIENTES");
             });
 
@@ -53,6 +57,8 @@ namespace X_Libra_Catering.Server.Data
                 entity.Property(e => e.Precio).HasColumnName("PRECIO").HasColumnType("decimal(10,2)");
                 entity.Property(e => e.RequiereRefrigeracion).HasColumnName("REQUIERE_REFRIGERACION");
                 entity.Property(e => e.ImagenRuta).HasColumnName("IMAGEN_RUTA").HasMaxLength(500).IsUnicode(false);
+                entity.Property(e => e.FechaCreacion).HasColumnName("FECHA_CREACION");
+                entity.Property(e => e.FechaModificacion).HasColumnName("FECHA_MODIFICACION");
             });
 
             modelBuilder.Entity<Vehiculo>(entity =>
@@ -70,6 +76,8 @@ namespace X_Libra_Catering.Server.Data
                 entity.Property(e => e.Direccion).HasColumnName("DIRECCION").HasMaxLength(200).IsUnicode(false);
                 entity.Property(e => e.Latitud).HasColumnName("LATITUD");
                 entity.Property(e => e.Longitud).HasColumnName("LONGITUD");
+                entity.Property(e => e.FechaCreacion).HasColumnName("FECHA_CREACION");
+                entity.Property(e => e.FechaModificacion).HasColumnName("FECHA_MODIFICACION");
             });
 
             modelBuilder.Entity<PedidoCabecera>(entity =>
@@ -82,6 +90,8 @@ namespace X_Libra_Catering.Server.Data
                 entity.Property(e => e.FechaPedido).HasColumnName("FECHA_PEDIDO");
                 entity.Property(e => e.Estado).HasColumnName("ESTADO").HasConversion<string>().HasMaxLength(20).IsUnicode(false);
                 entity.Property(e => e.Total).HasColumnName("TOTAL").HasColumnType("decimal(12,2)");
+                entity.Property(e => e.FechaCreacion).HasColumnName("FECHA_CREACION");
+                entity.Property(e => e.FechaModificacion).HasColumnName("FECHA_MODIFICACION");
                 entity.HasOne(e => e.Evento).WithMany(e => e.Pedidos).HasForeignKey(e => e.EventoId).HasConstraintName("FK_PEDIDO_CABECERA_EVENTOS");
                 entity.HasOne(e => e.Vehiculo).WithMany(v => v.Pedidos).HasForeignKey(e => e.VehiculoId).HasConstraintName("FK_PEDIDO_CABECERA_VEHICULOS");
             });
@@ -96,6 +106,8 @@ namespace X_Libra_Catering.Server.Data
                 entity.Property(e => e.Cantidad).HasColumnName("CANTIDAD");
                 entity.Property(e => e.PrecioUnitario).HasColumnName("PRECIO_UNITARIO").HasColumnType("decimal(10,2)");
                 entity.Property(e => e.Subtotal).HasColumnName("SUBTOTAL").HasColumnType("decimal(12,2)");
+                entity.Property(e => e.FechaCreacion).HasColumnName("FECHA_CREACION");
+                entity.Property(e => e.FechaModificacion).HasColumnName("FECHA_MODIFICACION");
                 entity.HasOne(e => e.Pedido).WithMany(p => p.Detalles).HasForeignKey(e => e.PedidoId).HasConstraintName("FK_PEDIDO_DETALLE_PEDIDO_CABECERA");
                 entity.HasOne(e => e.Menu).WithMany(m => m.PedidoDetalles).HasForeignKey(e => e.MenuId).HasConstraintName("FK_PEDIDO_DETALLE_MENUS");
             });
@@ -104,5 +116,17 @@ namespace X_Libra_Catering.Server.Data
         }
 
         partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
+
+        public override async Task<int> SaveChangesAsync(CancellationToken ct = default)
+        {
+            foreach (var entry in ChangeTracker.Entries<IAuditable>())
+            {
+                if (entry.State == EntityState.Added)
+                    entry.Entity.FechaCreacion = DateTime.UtcNow;
+                if (entry.State == EntityState.Modified)
+                    entry.Entity.FechaModificacion = DateTime.UtcNow;
+            }
+            return await base.SaveChangesAsync(ct);
+        }
     }
 }

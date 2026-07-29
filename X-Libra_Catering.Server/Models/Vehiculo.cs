@@ -1,6 +1,6 @@
 namespace X_Libra_Catering.Server.Models
 {
-    public partial class Vehiculo
+    public partial class Vehiculo : IAuditable
     {
         public int Id { get; set; }
         public string Marca { get; set; } = string.Empty;
@@ -12,6 +12,8 @@ namespace X_Libra_Catering.Server.Models
         public string? Direccion { get; set; }
         public double? Latitud { get; set; }
         public double? Longitud { get; set; }
+        public DateTime? FechaCreacion { get; set; }
+        public DateTime? FechaModificacion { get; set; }
         public virtual ICollection<PedidoCabecera> Pedidos { get; set; } = new List<PedidoCabecera>();
     }
 }

@@ -9,5 +9,7 @@ namespace X_Libra_Catering.Shared
         public decimal PrecioUnitario { get; set; }
         public decimal Subtotal { get; set; }
         public string? MenuNombre { get; set; }
+        public DateTime? FechaCreacion { get; set; }
+        public DateTime? FechaModificacion { get; set; }
     }
 }

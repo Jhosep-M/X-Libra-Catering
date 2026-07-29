@@ -70,7 +70,9 @@ namespace X_Libra_Catering.Server.Controllers
                     FechaEvento = e.FechaEvento,
                     Ubicacion = e.Ubicacion,
                     NumInvitados = e.NumInvitados,
-                    ClienteNombre = e.Cliente?.Nombre
+                    ClienteNombre = e.Cliente?.Nombre,
+                    FechaCreacion = e.FechaCreacion,
+                    FechaModificacion = e.FechaModificacion
                 }).ToList();
                 RespuestaApi.EsCorrecto = true;
                 RespuestaApi.Valor = listaDTO;
@@ -109,7 +111,9 @@ namespace X_Libra_Catering.Server.Controllers
                         FechaEvento = entidad.FechaEvento,
                         Ubicacion = entidad.Ubicacion,
                         NumInvitados = entidad.NumInvitados,
-                        ClienteNombre = entidad.Cliente?.Nombre
+                        ClienteNombre = entidad.Cliente?.Nombre,
+                        FechaCreacion = entidad.FechaCreacion,
+                        FechaModificacion = entidad.FechaModificacion
                     };
                     RespuestaApi.Mensaje = "Evento encontrado";
                 }
