@@ -139,14 +139,6 @@
         await CargarLista();
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (vistaMapa && firstRender)
-        {
-            await InicializarMapa();
-        }
-    }
-
     private async Task CargarLista()
     {
         cargando = true;

@@ -46,11 +46,14 @@ window.mapaApp = {
     },
 
     iniciarPicker: function (elementoId, lat, lng) {
-        if (!this.map) {
-            const centro = (lat && lng) ? { lat: lat, lng: lng } : { lat: -17.7833, lng: -63.1822 };
-            this.map = L.map(elementoId).setView(centro, 15);
-            this._tiles();
+        if (this.map) {
+            this.map.remove();
+            this.map = null;
+            this.marcadorPicker = null;
         }
+        const centro = (lat && lng) ? { lat: lat, lng: lng } : { lat: -17.7833, lng: -63.1822 };
+        this.map = L.map(elementoId).setView(centro, 15);
+        this._tiles();
         if (lat && lng) {
             this.marcadorPicker = L.marker([lat, lng], { draggable: true }).addTo(this.map);
         }
